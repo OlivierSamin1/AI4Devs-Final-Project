@@ -4,3 +4,4 @@
   - recreation of the whole documentation (2h)
 2. exploratory phase for my project: 1h
 
+3. New Rapberry install follwing the documentation: 3h

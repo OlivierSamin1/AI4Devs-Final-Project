@@ -128,3 +128,26 @@ Here is what I want you to do:
 **Prompt 3**:
 you are a senior product manager and a senior business analyst. You will generate the files that are listed in @00_integration_documentation_summary.md and still not yet created in the folder @database_integration_documentation . First read @03_final_project.md and the files inside @database_documentation to understand the new project and the already existing database it will be connected to.
 
+20250330
+----
+
+=========== exploratory phase ===================
+**Prompt 1**:
+Now you will generate a MOSCOW matrix for this project
+
+**Prompt 2**:
+You are a senior product manager and a senior business analyst. Using the project documentation @database_integration_documentation and @03_final_project.md you will help me implement the first step of the implementation:  create a 'Hello world' web page with one data coming from my database (we will display for this example the dates of all the last reservations for the flat of FuerteVentura for the month of february 2025). What you have to deliver is:
+1. A very complete an detailed document called 01_Hello_world_POC.md where all the steps are detailled. From the hardware steps (setup the Raspberry Pi 4 with its OS, setup the environment, creating the docker containers needed and so on) untill all the software implementation for this step. You will also provide detailed steps to configure a website that can be accesible to anyone (for now)
+2. This file will be into a new folder called implementation_steps. 
+3. If this file is too large to be created at once, you cancreate sub files for each part and refer to them.
+
+**Prompt 3**:
+You have to update your documents for the following info:
+1. The Raspberry Pi 3B with  the database is already running and working on my local network, no need for configuration or setup. The application will need to connect to it.
+2. The data for February 2025 is already existing in the database. There will be no need to create synthetic data or create any new model in the database. These are already implemented, working and existing data that will be used for this POC
+
+**Prompt 4**:
+You have to update the documentation @03_final_project.md to ensure that the following information is taken into account: the whole software inside the Raspberry pi 4 will run inside a docker container (or several if needed, with celery and so on). When updated, you will have to update the documentation in the repo @implementation_steps 
+
+**Prompt 5**:
+You dockerized only the backend, I want the whole project dockeriezd, so it means also the front end. Update all the files @03_final_project.md and the repo @implementation_steps 
