@@ -1,3 +1,6 @@
+from django.db import models
+
+
 class Asset(models.Model):
     owner = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='real_estate_asset', blank=True, null=True)
