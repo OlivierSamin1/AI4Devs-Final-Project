@@ -7,4 +7,5 @@
 3. New Rapberry install following the documentation: 3h
 4. refactoring again my database because trying building tests results in finding a structural error in my project: 3h
 5. Trying to use QEMU to perform test directly with my local machine (x86 architecture): 3h and I stopped here
-6. creating tests for my actual relifted databse (new structure and refactorized): 0.5h 
+6. creating tests for my actual relifted databse (new structure and refactorized): 2h 
+7. starting the POC setup: 1h
