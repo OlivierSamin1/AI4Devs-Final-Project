@@ -6,7 +6,7 @@ import io
 import zipfile
 import logging
 from django.http import HttpResponse
-from config import settings
+from jarvis import settings
 from dotenv import load_dotenv
 from core.utils.file_handling import create_zip_file, save_zip_file, create_download_response
 

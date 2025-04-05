@@ -1,6 +1,6 @@
 from django.http import FileResponse
 import os
-from config import settings
+from jarvis import settings
 from dotenv import load_dotenv
 
 load_dotenv()

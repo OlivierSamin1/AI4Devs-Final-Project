@@ -1,5 +1,5 @@
 import datetime
-from config import settings
+from jarvis import settings
 import os
 import pandas as pd
 import csv
