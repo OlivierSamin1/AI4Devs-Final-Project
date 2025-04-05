@@ -8,7 +8,7 @@ import logging
 import tempfile
 import shutil
 from django.http import FileResponse, HttpResponse
-from config import settings
+from jarvis import settings
 
 logger = logging.getLogger(__name__)
 
