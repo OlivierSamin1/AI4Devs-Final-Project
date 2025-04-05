@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
-from .models import Reservation, Asset
+from .models import HollydaysReservation, Asset
 from .serializers import ReservationSerializer
 
 # Create your views here.
@@ -19,7 +19,7 @@ def get_fuerteventura_reservations(request):
         if not asset:
             return Response({'error': 'FuerteVentura asset not found'}, status=404)
         
-        reservations = Reservation.objects.filter(
+        reservations = HollydaysReservation.objects.filter(
             Q(asset=asset) &
             (
                 Q(entry_date__month=month, entry_date__year=year) |
