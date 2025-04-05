@@ -39,7 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'reservation_api',
+    'finances',
+    'real_estate',
+    'tax',
+    'transportation',
+    'health',
+    'administrative'
 ]
 
 MIDDLEWARE = [
@@ -134,7 +139,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
-    "http://192.168.1.10:8000",
+    "http://192.168.1.128:8000",
     "https://192.168.1.128",
 ]
 
