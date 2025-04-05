@@ -21,6 +21,7 @@ class Tenant(models.Model):
     class Meta:
         ordering = ['asset', 'is_actual_tenant', 'last_name', 'first_name']
         verbose_name_plural = "Tenants"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return self.first_name + ' ' + self.last_name

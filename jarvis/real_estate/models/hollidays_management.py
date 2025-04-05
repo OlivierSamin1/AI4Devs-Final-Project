@@ -14,6 +14,7 @@ class HollydaysPlatform(models.Model):
     class Meta:
         ordering = ['name']
         verbose_name_plural = "Hollydays Platforms"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return self.name
@@ -47,6 +48,7 @@ class HollydaysReservation(models.Model):
     class Meta:
         ordering = ['asset', 'platform', 'reservation_number']
         verbose_name_plural = "Hollydays Reservations"
+        managed = False  # Important: don't try to manage this table
 
     def save(self, *args, **kwargs):
         self.generate_all_days()

@@ -26,6 +26,7 @@ class Bill(models.Model):
     class Meta:
         ordering = ['asset', 'bill_name', 'date', 'total_price']
         verbose_name_plural = "Bills"
+        managed = False  # Important: don't try to manage this table
 
     def auto_correct_bill_name(self):
         for key, value in constants.mapping_bill_name.items():

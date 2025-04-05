@@ -20,6 +20,7 @@ class Bill(models.Model):
     class Meta:
         ordering = ['client_name', 'bill_name', 'date', 'total_price', 'is_paid', 'is_asked_by_us']
         verbose_name_plural = "Bills"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         if self.company_name and self.bill_name:

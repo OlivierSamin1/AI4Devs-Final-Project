@@ -14,7 +14,7 @@ class TaxManagementCompany(models.Model):
     class Meta:
         ordering = ['name', 'site_app_company', 'personal_email_used']
         verbose_name_plural = "Tax Management Companies"
-
+        managed = False  # Important: don't try to manage this table
     def __str__(self):
         return self.name
 
@@ -33,6 +33,7 @@ class TaxManagementContract(models.Model):
     class Meta:
         ordering = ['is_contract_active', 'company']
         verbose_name_plural = "Tax Management Contracts"
-
+        managed = False  # Important: don't try to manage this table
+        
     def __str__(self):
         return self.company.name

@@ -17,6 +17,7 @@ class Symptom(models.Model):
     class Meta:
         ordering = ['name', 'adult', 'child']
         verbose_name_plural = "Symptoms"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         name = self.name

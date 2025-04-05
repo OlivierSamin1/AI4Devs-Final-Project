@@ -19,6 +19,7 @@ class Mortgage(models.Model):
     class Meta:
         ordering = ['asset', 'name']
         verbose_name_plural = "Mortgages"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         if self.name:

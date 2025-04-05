@@ -10,6 +10,7 @@ class Bank(models.Model):
     class Meta:
         ordering = ['name']
         verbose_name_plural = "Banks"
-
+        managed = False  # Important: don't try to manage this table
+        
     def __str__(self):
         return self.name

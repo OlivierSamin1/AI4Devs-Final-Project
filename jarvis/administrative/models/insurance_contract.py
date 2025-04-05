@@ -23,6 +23,7 @@ class InsuranceContract(models.Model):
     class Meta:
         ordering = ['company', 'type', 'annual_price']
         verbose_name_plural = "Insurances"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return self.company.name + ' -- ' + self.type

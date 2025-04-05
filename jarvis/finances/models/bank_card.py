@@ -12,6 +12,7 @@ class BankCard(models.Model):
     class Meta:
         ordering = ['bank_account__bank__name', 'name', 'card_number', 'ending_date', 'CCV']
         verbose_name_plural = "Bank Cards"
-
+        managed = False  # Important: don't try to manage this table
+        
     def __str__(self):
         return self.bank_account.bank.name if not self.name else self.bank_account.bank.name + " - " + self.name

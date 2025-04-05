@@ -11,6 +11,7 @@ class File(models.Model):
 
     class Meta:
         verbose_name_plural = "Files"
+        managed = False  # Important: don't try to manage this table
 
     @property
     def file_tag(self):

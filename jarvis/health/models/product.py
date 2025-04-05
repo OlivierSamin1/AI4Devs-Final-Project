@@ -22,6 +22,7 @@ class Product(models.Model):
     class Meta:
         ordering = ['name', 'natural', 'child_use', 'min_age']
         verbose_name_plural = "Products"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         name = self.name

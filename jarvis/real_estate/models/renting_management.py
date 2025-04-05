@@ -14,7 +14,7 @@ class RentingManagementCompany(models.Model):
     class Meta:
         ordering = ['name']
         verbose_name_plural = "Renting Management Companies"
-
+        managed = False  # Important: don't try to manage this table
     def __str__(self):
         return self.name
 
@@ -34,6 +34,7 @@ class RentingManagementContract(models.Model):
     class Meta:
         ordering = ['is_management_active', 'company__name', 'asset']
         verbose_name_plural = "Renting Managements"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return str(self.company)

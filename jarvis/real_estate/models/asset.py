@@ -25,6 +25,7 @@ class Asset(models.Model):
     class Meta:
         ordering = ['owner', 'nickname', 'buying_date']
         verbose_name_plural = "Assets"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return self.nickname

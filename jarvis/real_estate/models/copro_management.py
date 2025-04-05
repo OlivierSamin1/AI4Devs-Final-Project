@@ -14,6 +14,7 @@ class CoproManagementCompany(models.Model):
     class Meta:
         ordering = ['name']
         verbose_name_plural = "Copro Management Companies"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return self.name
@@ -36,6 +37,7 @@ class CoproManagementContract(models.Model):
     class Meta:
         ordering = ['company__name', 'is_management_active']
         verbose_name_plural = "Copro Management Contracts"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return self.company.name

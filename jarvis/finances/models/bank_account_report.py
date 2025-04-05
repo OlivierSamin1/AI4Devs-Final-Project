@@ -8,6 +8,7 @@ class BankAccountReport(models.Model):
     class Meta:
         ordering = ['bank_account', 'date']
         verbose_name_plural = "Bank Account Reports"
+        managed = False  # Important: don't try to manage this table
 
     def set_date_to_str(self):
         return str(self.date.year) + str(self.date.month)

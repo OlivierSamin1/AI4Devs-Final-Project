@@ -23,6 +23,7 @@ class Asset(models.Model):
         ordering = ['type', 'brand', 'model']
         verbose_name_plural = "Assets"
         app_label = 'transportation'
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return self.type + ' - ' + self.brand

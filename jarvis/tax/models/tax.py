@@ -30,6 +30,7 @@ class Tax(models.Model):
     class Meta:
         ordering = ['name', 'tax_type']
         verbose_name_plural = "Taxes"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return self.name

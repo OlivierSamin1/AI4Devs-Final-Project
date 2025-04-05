@@ -22,6 +22,7 @@ class Document(models.Model):
     class Meta:
         ordering = ['type', 'name']
         verbose_name_plural = "Documents"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return self.name + ' - ' + self.type if self.name else self.type

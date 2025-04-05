@@ -17,6 +17,7 @@ class BankAccount(models.Model):
     class Meta:
         ordering = ['bank__name', 'is_account_open', 'IBAN']
         verbose_name_plural = "Bank Accounts"
+        managed = False  # Important: don't try to manage this table
 
     def __str__(self):
         return self.bank.name + " - " + self.name
