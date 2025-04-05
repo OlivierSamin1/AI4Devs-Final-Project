@@ -26,7 +26,12 @@ SECRET_KEY = 'django-insecure-gta0jxjstq@m95_0f6tiaj=*!rm&qe6#+gn%#_6jkbpdyas^=j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '192.168.1.127',  # Your Raspberry Pi's IP address
+    'jarvis',  # Optional: Allow all hosts (only for development)
+]
 
 
 # Application definition
@@ -144,11 +149,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = [
-    "http://192.168.1.128:8000",
-    "https://192.168.1.128",
-]
+CORS_ALLOW_ALL_ORIGINS = True  # Set to True for development
+# CORS_ALLOWED_ORIGINS = [
+#     "http://192.168.1.128:8000",
+#     "https://192.168.1.128",
+#     # Add any other origins you want to allow
+# ]
 
 # REST Framework settings
 REST_FRAMEWORK = {
