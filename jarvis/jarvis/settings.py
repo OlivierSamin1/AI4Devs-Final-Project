@@ -30,6 +30,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '192.168.1.129',  # Your Raspberry Pi's IP address
+    'jarvis'
 ]
 
 
