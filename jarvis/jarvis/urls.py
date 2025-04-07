@@ -26,6 +26,7 @@ urlpatterns = [
     
     # API endpoints
     path('api/administrative/', include('administrative.api.urls')),
+    path('api/health/', include('health.api.urls')),
     path('api-token-auth/', views.obtain_auth_token),
 ]
 
