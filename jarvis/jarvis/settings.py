@@ -38,7 +38,6 @@ ALLOWED_HOSTS = [
     'jarvis'
 ]
 
-REDIS_URL = redis://redis:6379/1
 
 # Application definition
 
