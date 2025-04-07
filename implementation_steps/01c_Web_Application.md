@@ -1,6 +1,6 @@
 # Web Application Server Implementation
 
-This document outlines the steps to set up the web application server on the Raspberry Pi 4, which will host the containerized Django backend, React frontend, and supporting services for displaying the FuerteVentura property reservations.
+This document outlines the steps to set up the web application server on the Raspberry Pi 4, which will host the containerized Django backend, React frontend, and supporting services for displaying health symptoms and related products.
 
 ## Prerequisites
 
@@ -50,40 +50,30 @@ We'll use Docker to containerize our entire application stack for easier deploym
    mkdir -p backend frontend nginx redis
    ```
 
-## Backend Container Implementation
+## Backend Container Configuration
 
-### Django Project Setup
+Instead of creating a new Django application, we'll use the existing backend application that already has the Health app with the Symptom model. We'll set up a Docker container for it.
 
-1. Create a requirements.txt file in the backend directory:
+1. Clone the existing backend repository:
    ```bash
-   nano backend/requirements.txt
+   cd ~/personal-db-assistant
+   git clone [REPOSITORY_URL] backend
+   cd backend
    ```
 
-2. Add the following dependencies:
-   ```
-   Django==4.2.10
-   djangorestframework==3.14.0
-   django-cors-headers==4.3.1
-   requests==2.31.0
-   gunicorn==21.2.0
-   python-dotenv==1.0.0
-   psycopg2-binary==2.9.9
-   redis==5.0.1
-   ```
-
-3. Create a Dockerfile for the backend:
+2. Create a Dockerfile for the existing backend:
    ```bash
-   nano backend/Dockerfile
+   nano Dockerfile
    ```
 
-4. Add the following content:
+3. Add the following content:
    ```dockerfile
    FROM python:3.10-slim-buster
 
    WORKDIR /app
 
-   ENV PYTHONDONTWRITEBYTECODE 1
-   ENV PYTHONUNBUFFERED 1
+   ENV PYTHONDONTWRITEBYTECODE=1
+   ENV PYTHONUNBUFFERED=1
 
    RUN apt-get update && apt-get install -y --no-install-recommends \
        gcc \
@@ -96,308 +86,183 @@ We'll use Docker to containerize our entire application stack for easier deploym
 
    EXPOSE 8000
 
-   CMD ["gunicorn", "--bind", "0.0.0.0:8000", "web_app.wsgi:application"]
+   # Adjust the command based on your project's actual WSGI application path
+   CMD ["gunicorn", "--bind", "0.0.0.0:8000", "jarvis.wsgi:application"]
    ```
 
-5. Create the Django project:
+4. If the project doesn't already have a requirements.txt file, create one:
    ```bash
-   cd backend
-   docker run --rm -v $(pwd):/app -w /app python:3.10-slim-buster pip install django==4.2.10
-   docker run --rm -v $(pwd):/app -w /app python:3.10-slim-buster django-admin startproject web_app .
+   pip freeze > requirements.txt
    ```
-
-6. Create a Django app for the dashboard:
+   
+   Or create one manually with the minimum required packages:
    ```bash
-   docker run --rm -v $(pwd):/app -w /app python:3.10-slim-buster python manage.py startapp dashboard
+   nano requirements.txt
+   ```
+   
+   And add:
+   ```
+   Django==4.2.10
+   djangorestframework==3.14.0
+   django-cors-headers==4.3.1
+   gunicorn==21.2.0
+   python-dotenv==1.0.0
+   psycopg2-binary==2.9.9
+   redis==5.0.1
    ```
 
-### Backend Configuration
-
-1. Edit the Django settings:
+5. Create a .env file for environment variables:
    ```bash
-   nano web_app/settings.py
+   nano .env
    ```
 
-2. Update the settings:
+6. Add the following content in your .env file (update with your actual values):
+   ```
+   DEBUG=False
+   SECRET_KEY=your-secure-secret-key
+   ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.10,your-domain.com,backend
+   REDIS_URL=redis://redis:6379/1
+   ```
+
+7. Create or update the project's settings to work with the containerized setup. This might involve creating a separate settings file for Docker or modifying the existing settings:
+
+   ```bash
+   nano jarvis/settings.py
+   ```
+   
+   Add or update the following configurations:
+   
    ```python
+   # Add the following imports at the top if they don't exist
    import os
    from pathlib import Path
-
-   # Build paths inside the project like this: BASE_DIR / 'subdir'.
-   BASE_DIR = Path(__file__).resolve().parent.parent
-
-   # SECURITY WARNING: keep the secret key used in production secret!
-   SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-for-development')
-
-   # SECURITY WARNING: don't run with debug turned on in production!
-   DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-
+   from dotenv import load_dotenv
+   
+   # Load environment variables
+   load_dotenv()
+   
+   # Update ALLOWED_HOSTS
    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-
-   # Application definition
-   INSTALLED_APPS = [
-       'django.contrib.admin',
-       'django.contrib.auth',
-       'django.contrib.contenttypes',
-       'django.contrib.sessions',
-       'django.contrib.messages',
-       'django.contrib.staticfiles',
-       'rest_framework',
-       'corsheaders',
-       'dashboard',
-   ]
-
-   MIDDLEWARE = [
-       'django.middleware.security.SecurityMiddleware',
-       'django.contrib.sessions.middleware.SessionMiddleware',
-       'corsheaders.middleware.CorsMiddleware',
-       'django.middleware.common.CommonMiddleware',
-       'django.middleware.csrf.CsrfViewMiddleware',
-       'django.contrib.auth.middleware.AuthenticationMiddleware',
-       'django.contrib.messages.middleware.MessageMiddleware',
-       'django.middleware.clickjacking.XFrameOptionsMiddleware',
-   ]
-
-   ROOT_URLCONF = 'web_app.urls'
-
-   TEMPLATES = [
-       {
-           'BACKEND': 'django.template.backends.django.DjangoTemplates',
-           'DIRS': [os.path.join(BASE_DIR, 'templates')],
-           'APP_DIRS': True,
-           'OPTIONS': {
-               'context_processors': [
-                   'django.template.context_processors.debug',
-                   'django.template.context_processors.request',
-                   'django.contrib.auth.context_processors.auth',
-                   'django.contrib.messages.context_processors.messages',
-               ],
-           },
-       },
-   ]
-
-   WSGI_APPLICATION = 'web_app.wsgi.application'
-
-   # Database - we're using SQLite for the web app's local storage needs
-   # The actual property data comes from the external Raspberry Pi 3B database via API
-   DATABASES = {
-       'default': {
-           'ENGINE': 'django.db.backends.sqlite3',
-           'NAME': BASE_DIR / 'db.sqlite3',
-       }
-   }
-
-   # Redis cache configuration
-   CACHES = {
-       "default": {
-           "BACKEND": "django.core.cache.backends.redis.RedisCache",
-           "LOCATION": os.environ.get('REDIS_URL', 'redis://redis:6379/1'),
-       }
-   }
-
-   # Password validation
-   # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
-   AUTH_PASSWORD_VALIDATORS = [
-       {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-       {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-       {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-       {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-   ]
-
-   # Internationalization
-   # https://docs.djangoproject.com/en/4.2/topics/i18n/
-   LANGUAGE_CODE = 'en-us'
-   TIME_ZONE = 'UTC'
-   USE_I18N = True
-   USE_TZ = True
-
-   # Static files (CSS, JavaScript, Images)
-   # https://docs.djangoproject.com/en/4.2/howto/static-files/
-   STATIC_URL = 'static/'
-   STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-   STATICFILES_DIRS = [
-       os.path.join(BASE_DIR, 'static'),
-   ]
-
-   # Default primary key field type
-   # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-   DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-   # CORS settings
+   
+   # Add or update CORS settings
    CORS_ALLOW_ALL_ORIGINS = False
    CORS_ALLOWED_ORIGINS = [
        "http://localhost:3000",
        "http://localhost:8000",
        "http://localhost",
        "http://frontend:3000",  # Allow the frontend container
+       "http://frontend:80",    # Allow the frontend container in production
    ]
-
-   # Database API settings - update these with your actual credentials
-   DB_API_BASE_URL = os.environ.get('DB_API_BASE_URL', 'http://192.168.2.10:8000/api')
-   DB_API_USERNAME = os.environ.get('DB_API_USERNAME', 'api_user')
-   DB_API_PASSWORD = os.environ.get('DB_API_PASSWORD', 'api_password')
+   
+   # Add Redis cache configuration
+   CACHES = {
+       "default": {
+           "BACKEND": "django.core.cache.backends.redis.RedisCache",
+           "LOCATION": os.environ.get('REDIS_URL', 'redis://redis:6379/1'),
+       }
+   }
    ```
 
-3. Create an API client for communicating with the database server:
+8. Ensure the Health app has a properly configured API endpoint for Symptoms. If it doesn't exist, create a REST API endpoint.
+
+   First, check if the app already has serializers:
    ```bash
-   nano dashboard/api_client.py
+   ls jarvis/health/serializers.py
    ```
-
-4. Add the following code:
-   ```python
-   import requests
-   from django.conf import settings
-   import logging
-
-   logger = logging.getLogger(__name__)
-
-   class DatabaseAPIClient:
-       def __init__(self):
-           self.base_url = settings.DB_API_BASE_URL
-           self.auth = (settings.DB_API_USERNAME, settings.DB_API_PASSWORD)
-       
-       def _make_request(self, method, endpoint, params=None, data=None):
-           url = f"{self.base_url}/{endpoint}"
-           
-           try:
-               response = requests.request(
-                   method,
-                   url,
-                   auth=self.auth,
-                   params=params,
-                   json=data,
-                   timeout=10
-               )
-               response.raise_for_status()
-               return response.json()
-           except requests.exceptions.RequestException as e:
-               logger.error(f"API request error: {e}")
-               return None
-       
-       def get_fuerteventura_reservations(self, month=2, year=2025):
-           """Fetch February 2025 reservations for FuerteVentura property from the existing database API"""
-           return self._make_request('GET', 'fuerteventura-reservations/', params={'month': month, 'year': year})
-   ```
-
-5. Create views in dashboard/views.py:
+   
+   If not, create one:
    ```bash
-   nano dashboard/views.py
+   nano jarvis/health/serializers.py
+   ```
+   
+   Add the following content:
+   ```python
+   from rest_framework import serializers
+   from .models.symptom import Symptom
+   from .models.product import Product
+   
+   class ProductSerializer(serializers.ModelSerializer):
+       class Meta:
+           model = Product
+           fields = ['id', 'name']
+   
+   class SymptomSerializer(serializers.ModelSerializer):
+       products = ProductSerializer(many=True, read_only=True)
+       
+       class Meta:
+           model = Symptom
+           fields = ['id', 'name', 'child', 'adult', 'products', 'comments']
    ```
 
-6. Add the following code:
+9. Create or update the API views for the Health app:
+   ```bash
+   nano jarvis/health/views.py
+   ```
+   
+   Add the following content:
    ```python
-   from django.shortcuts import render
-   from django.http import JsonResponse
-   from .api_client import DatabaseAPIClient
-   from datetime import datetime
+   from rest_framework import viewsets
+   from rest_framework.response import Response
+   from .models.symptom import Symptom
+   from .serializers import SymptomSerializer
    from django.views.decorators.cache import cache_page
-
-   def home(request):
-       return render(request, 'dashboard/home.html')
-
-   @cache_page(60 * 5)  # Cache for 5 minutes
-   def reservations_api(request):
-       # Get query parameters with defaults set for February 2025
-       month = request.GET.get('month', '2')
-       year = request.GET.get('year', '2025')
+   from django.utils.decorators import method_decorator
+   
+   class SymptomViewSet(viewsets.ReadOnlyModelViewSet):
+       queryset = Symptom.objects.all().prefetch_related('products')
+       serializer_class = SymptomSerializer
        
-       # Use API client to fetch data from the existing database
-       client = DatabaseAPIClient()
-       reservations = client.get_fuerteventura_reservations(month, year)
+       @method_decorator(cache_page(60 * 5))  # Cache for 5 minutes
+       def list(self, request, *args, **kwargs):
+           return super().list(request, *args, **kwargs)
        
-       if reservations is None:
-           return JsonResponse({'error': 'Failed to fetch reservations from database server'}, status=500)
-       
-       return JsonResponse(reservations, safe=False)
+       @method_decorator(cache_page(60 * 5))
+       def retrieve(self, request, *args, **kwargs):
+           return super().retrieve(request, *args, **kwargs)
    ```
 
-7. Create the URLs for the dashboard app in dashboard/urls.py:
-   ```bash
-   nano dashboard/urls.py
-   ```
-
-8. Add the following code:
-   ```python
-   from django.urls import path
-   from . import views
-
-   urlpatterns = [
-       path('', views.home, name='home'),
-       path('api/reservations/', views.reservations_api, name='reservations_api'),
-   ]
-   ```
-
-9. Update the project URLs in web_app/urls.py:
-   ```bash
-   nano web_app/urls.py
-   ```
-
-10. Add the following code:
+10. Add URL patterns for the API:
+    ```bash
+    nano jarvis/health/urls.py
+    ```
+    
+    Add the following content:
     ```python
-    from django.contrib import admin
     from django.urls import path, include
-    from django.conf import settings
-    from django.conf.urls.static import static
-
+    from rest_framework.routers import DefaultRouter
+    from .views import SymptomViewSet
+    
+    router = DefaultRouter()
+    router.register(r'symptoms', SymptomViewSet)
+    
     urlpatterns = [
-        path('admin/', admin.site.urls),
-        path('api/', include('dashboard.urls')),
+        path('', include(router.urls)),
     ]
-
-    if settings.DEBUG:
-        urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     ```
 
-11. Create a static directory:
+11. Finally, include the Health app URLs in the main project URLs:
     ```bash
-    mkdir -p static/css
+    nano jarvis/urls.py
+    ```
+    
+    Ensure the following pattern is included:
+    ```python
+    urlpatterns = [
+        # ... other patterns ...
+        path('api/health/', include('jarvis.health.urls')),
+    ]
     ```
 
-12. Create a simple CSS file in static/css/style.css:
+12. Test the API endpoint by running the development server:
     ```bash
-    nano static/css/style.css
+    python manage.py runserver
     ```
+    
+    And accessing: http://localhost:8000/api/health/symptoms/
+    
+    If everything works as expected, you can stop the development server.
 
-13. Add some basic styles:
-    ```css
-    body {
-        background-color: #f8f9fa;
-    }
-
-    .card {
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .card-header {
-        background-color: #007bff;
-        color: white;
-    }
-
-    .table {
-        margin-bottom: 0;
-    }
-
-    .table th {
-        background-color: #e9ecef;
-    }
-    ```
-
-14. Create a .env file for environment variables:
-    ```bash
-    nano .env
-    ```
-
-15. Add the following content (update with your actual values for the existing database API):
-    ```
-    DEBUG=False
-    SECRET_KEY=your-secure-secret-key
-    ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.10,your-domain.com,backend
-    DB_API_BASE_URL=http://192.168.2.10:8000/api
-    DB_API_USERNAME=your_api_username
-    DB_API_PASSWORD=your_api_password
-    REDIS_URL=redis://redis:6379/1
-    ```
+These steps configure the existing backend application to work within a Docker container and expose the necessary API endpoints for our frontend to consume the Symptoms data.
 
 ## Frontend Container Implementation
 
@@ -432,7 +297,7 @@ Now we'll create a separate React frontend container that will communicate with 
    FROM nginx:alpine
 
    # Copy the build output from the build stage
-   COPY --from=build /app/build /usr/share/nginx/html
+   COPY --from=build /app/dist /usr/share/nginx/html
 
    # Copy custom nginx config
    COPY ./nginx.conf /etc/nginx/conf.d/default.conf
@@ -467,66 +332,20 @@ Now we'll create a separate React frontend container that will communicate with 
    }
    ```
 
-6. Initialize a new React application using create-react-app:
+6. Initialize a new React application using Vite:
    ```bash
-   # Use a temporary Node container to create the React app
-   docker run --rm -v $(pwd):/app -w /app node:18-alpine sh -c "npx create-react-app . --template typescript"
+   # Use a temporary Node container to create the React app with Vite
+   docker run --rm -v $(pwd):/app -w /app node:18-alpine sh -c "npx create-vite@latest . --template react-ts"
    ```
 
-7. Create a package.json file:
+7. Install dependencies:
    ```bash
-   nano package.json
+   docker run --rm -v $(pwd):/app -w /app node:18-alpine npm install
    ```
 
-8. Update the package.json with necessary dependencies:
-   ```json
-   {
-     "name": "personal-db-assistant-frontend",
-     "version": "0.1.0",
-     "private": true,
-     "dependencies": {
-       "@testing-library/jest-dom": "^5.17.0",
-       "@testing-library/react": "^13.4.0",
-       "@testing-library/user-event": "^13.5.0",
-       "@types/jest": "^27.5.2",
-       "@types/node": "^16.18.40",
-       "@types/react": "^18.2.20",
-       "@types/react-dom": "^18.2.7",
-       "axios": "^1.4.0",
-       "bootstrap": "^5.3.1",
-       "react": "^18.2.0",
-       "react-bootstrap": "^2.8.0",
-       "react-dom": "^18.2.0",
-       "react-router-dom": "^6.15.0",
-       "react-scripts": "5.0.1",
-       "typescript": "^4.9.5",
-       "web-vitals": "^2.1.4"
-     },
-     "scripts": {
-       "start": "react-scripts start",
-       "build": "react-scripts build",
-       "test": "react-scripts test",
-       "eject": "react-scripts eject"
-     },
-     "eslintConfig": {
-       "extends": [
-         "react-app",
-         "react-app/jest"
-       ]
-     },
-     "browserslist": {
-       "production": [
-         ">0.2%",
-         "not dead",
-         "not op_mini all"
-       ],
-       "development": [
-         "last 1 chrome version",
-         "last 1 firefox version",
-         "last 1 safari version"
-       ]
-     }
-   }
+8. Install additional dependencies:
+   ```bash
+   docker run --rm -v $(pwd):/app -w /app node:18-alpine npm install axios bootstrap react-bootstrap react-router-dom
    ```
 
 9. Create a src/api.ts file:
@@ -542,31 +361,29 @@ Now we'll create a separate React frontend container that will communicate with 
     // Base URL for the API
     const API_URL = '/api';
 
-    // Interface for Reservation data
-    export interface Reservation {
+    // Interface for Symptom data
+    export interface Symptom {
       id: number;
-      asset_id: number;
-      asset_name: string;
-      platform_id: number;
-      platform_name: string;
-      reservation_number: string;
-      entry_date: string;
-      end_date: string;
-      number_of_nights: number;
-      renting_person_full_name: string;
-      price: string;
-      created_at: string;
+      name: string;
+      child: boolean;
+      adult: boolean;
+      products: Product[];
+      comments: Record<string, string> | null;
     }
 
-    // Function to fetch reservations
-    export const fetchReservations = async (month: number = 2, year: number = 2025): Promise<Reservation[]> => {
+    // Interface for Product data
+    export interface Product {
+      id: number;
+      name: string;
+    }
+
+    // Function to fetch symptoms
+    export const fetchSymptoms = async (): Promise<Symptom[]> => {
       try {
-        const response = await axios.get(`${API_URL}/api/reservations/`, {
-          params: { month, year }
-        });
+        const response = await axios.get(`${API_URL}/api/symptoms/`);
         return response.data;
       } catch (error) {
-        console.error('Error fetching reservations:', error);
+        console.error('Error fetching symptoms:', error);
         throw error;
       }
     };
@@ -577,64 +394,73 @@ Now we'll create a separate React frontend container that will communicate with 
     mkdir -p src/components
     ```
 
-12. Create a ReservationTable component:
+12. Create a SymptomTable component:
     ```bash
-    nano src/components/ReservationTable.tsx
+    nano src/components/SymptomTable.tsx
     ```
 
 13. Add the following content:
     ```tsx
     import React, { useEffect, useState } from 'react';
-    import { Table, Spinner, Alert } from 'react-bootstrap';
-    import { fetchReservations, Reservation } from '../api';
+    import { Table, Spinner, Alert, Badge } from 'react-bootstrap';
+    import { fetchSymptoms, Symptom } from '../api';
 
-    const ReservationTable: React.FC = () => {
-      const [reservations, setReservations] = useState<Reservation[]>([]);
+    const SymptomTable: React.FC = () => {
+      const [symptoms, setSymptoms] = useState<Symptom[]>([]);
       const [loading, setLoading] = useState<boolean>(true);
       const [error, setError] = useState<string | null>(null);
 
       useEffect(() => {
-        const loadReservations = async () => {
+        const loadSymptoms = async () => {
           try {
-            const data = await fetchReservations();
-            setReservations(data);
+            const data = await fetchSymptoms();
+            setSymptoms(data);
             setLoading(false);
           } catch (err) {
-            setError('Failed to load reservations from database');
+            setError('Failed to load symptoms from database');
             setLoading(false);
           }
         };
 
-        loadReservations();
+        loadSymptoms();
       }, []);
 
       if (loading) return <div className="text-center mt-5"><Spinner animation="border" /></div>;
       if (error) return <Alert variant="danger">{error}</Alert>;
-      if (reservations.length === 0) return <Alert variant="info">No reservations found for February 2025</Alert>;
+      if (symptoms.length === 0) return <Alert variant="info">No symptoms found in the database</Alert>;
 
       return (
         <Table striped bordered hover responsive>
           <thead>
             <tr>
-              <th>Check-in Date</th>
-              <th>Check-out Date</th>
-              <th>Nights</th>
-              <th>Guest</th>
-              <th>Platform</th>
-              <th>Reservation #</th>
-              <th>Price</th>
+              <th>Name</th>
+              <th>Applicable To</th>
+              <th>Products</th>
+              <th>Comments</th>
             </tr>
           </thead>
           <tbody>
-            {reservations.map(reservation => (
-              <tr key={reservation.id}>
-                <td>{new Date(reservation.entry_date).toLocaleDateString()}</td>
-                <td>{new Date(reservation.end_date).toLocaleDateString()}</td>
-                <td>{reservation.number_of_nights}</td>
-                <td>{reservation.renting_person_full_name}</td>
-                <td>{reservation.platform_name}</td>
-                <td>{reservation.reservation_number}</td>
-                <td>${parseFloat(reservation.price).toFixed(2)}</td>
+            {symptoms.map(symptom => (
+              <tr key={symptom.id}>
+                <td>{symptom.name}</td>
+                <td>
+                  {symptom.adult && <Badge bg="primary" className="me-1">Adult</Badge>}
+                  {symptom.child && <Badge bg="info">Child</Badge>}
+                </td>
+                <td>
+                  {symptom.products.map(product => (
+                    <Badge key={product.id} bg="secondary" className="me-1">{product.name}</Badge>
+                  ))}
+                </td>
+                <td>
+                  {symptom.comments && (
+                    <ul className="list-unstyled mb-0">
+                      {Object.entries(symptom.comments).map(([key, value]) => (
+                        <li key={key}><strong>{key}:</strong> {value}</li>
+                      ))}
+                    </ul>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -642,7 +468,7 @@ Now we'll create a separate React frontend container that will communicate with 
       );
     };
 
-    export default ReservationTable;
+    export default SymptomTable;
     ```
 
 14. Create the App component:
@@ -655,7 +481,7 @@ Now we'll create a separate React frontend container that will communicate with 
     import React from 'react';
     import 'bootstrap/dist/css/bootstrap.min.css';
     import { Container, Navbar, Card } from 'react-bootstrap';
-    import ReservationTable from './components/ReservationTable';
+    import SymptomTable from './components/SymptomTable';
     import './App.css';
 
     function App() {
@@ -663,17 +489,17 @@ Now we'll create a separate React frontend container that will communicate with 
         <div className="App">
           <Navbar bg="dark" variant="dark">
             <Container>
-              <Navbar.Brand href="/">Personal DB Assistant</Navbar.Brand>
+              <Navbar.Brand href="/">Health Symptoms Database</Navbar.Brand>
             </Container>
           </Navbar>
           
           <Container className="mt-4">
             <Card>
               <Card.Header>
-                <h2>FuerteVentura Reservations - February 2025</h2>
+                <h2>Health Symptoms and Recommended Products</h2>
               </Card.Header>
               <Card.Body>
-                <ReservationTable />
+                <SymptomTable />
               </Card.Body>
             </Card>
           </Container>
@@ -702,7 +528,7 @@ Now we'll create a separate React frontend container that will communicate with 
     }
 
     .card-header {
-      background-color: #007bff;
+      background-color: #198754; /* Green color for health theme */
       color: white;
     }
 
@@ -713,34 +539,53 @@ Now we'll create a separate React frontend container that will communicate with 
     .table th {
       background-color: #e9ecef;
     }
+
+    .badge {
+      font-size: 0.85em;
+    }
     ```
 
-18. Update the index.tsx file:
+18. Update the main.tsx file (Vite uses main.tsx instead of index.tsx):
     ```bash
-    nano src/index.tsx
+    nano src/main.tsx
     ```
 
 19. Replace with the following content:
     ```tsx
-    import React from 'react';
-    import ReactDOM from 'react-dom/client';
-    import './index.css';
-    import App from './App';
-    import reportWebVitals from './reportWebVitals';
+    import React from 'react'
+    import ReactDOM from 'react-dom/client'
+    import App from './App.tsx'
+    import './index.css'
 
-    const root = ReactDOM.createRoot(
-      document.getElementById('root') as HTMLElement
-    );
-    root.render(
+    ReactDOM.createRoot(document.getElementById('root')!).render(
       <React.StrictMode>
         <App />
-      </React.StrictMode>
-    );
+      </React.StrictMode>,
+    )
+    ```
 
-    // If you want to start measuring performance in your app, pass a function
-    // to log results (for example: reportWebVitals(console.log))
-    // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-    reportWebVitals();
+20. Update the vite.config.ts file:
+    ```bash
+    nano vite.config.ts
+    ```
+
+21. Add the following content:
+    ```typescript
+    import { defineConfig } from 'vite'
+    import react from '@vitejs/plugin-react'
+
+    // https://vitejs.dev/config/
+    export default defineConfig({
+      plugins: [react()],
+      server: {
+        proxy: {
+          '/api': {
+            target: 'http://backend:8000',
+            changeOrigin: true
+          }
+        }
+      }
+    })
     ```
 
 ## Redis Container Configuration
@@ -938,7 +783,7 @@ Now we'll create a separate React frontend container that will communicate with 
 ## Testing the Application
 
 1. Check that the web application is accessible.
-2. Verify that the FuerteVentura reservations are displayed for February 2025.
+2. Verify that the health symptoms and related products are displayed.
 3. Check that the data is being retrieved from the existing database server on Raspberry Pi 3B.
 4. Verify that all containers are running correctly: backend, frontend, nginx, and redis.
 
@@ -971,10 +816,10 @@ Now we'll create a separate React frontend container that will communicate with 
    - Docker container status: `docker-compose ps`
    - Docker logs: `docker-compose logs -f`
    - Network connectivity: `ping 192.168.2.10`
-   - Database API connectivity: `curl -u username:password http://192.168.2.10:8000/api/fuerteventura-reservations/`
+   - Database API connectivity: `curl -u username:password http://192.168.2.10:8000/api/health/symptoms/`
 
 2. If no data is displayed, check:
-   - Backend API response: `curl http://localhost/api/api/reservations/`
+   - Backend API response: `curl http://localhost/api/api/symptoms/`
    - API client configuration in settings.py
    - Connection to the existing database server
    - Frontend network configuration

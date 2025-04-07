@@ -1,0 +1,3 @@
+"""
+Health API initialization file.
+""" 

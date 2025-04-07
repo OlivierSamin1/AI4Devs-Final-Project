@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-gta0jxjstq@m95_0f6tiaj=*!rm&qe6#+gn%#_6jkbpdyas^=j'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -33,6 +38,7 @@ ALLOWED_HOSTS = [
     'jarvis'
 ]
 
+REDIS_URL = redis://redis:6379/1
 
 # Application definition
 
@@ -149,12 +155,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # Set to True for development
-# CORS_ALLOWED_ORIGINS = [
-#     "http://192.168.1.128:8000",
+CORS_ALLOW_ALL_ORIGINS = False  # Set to True for development
+CORS_ALLOWED_ORIGINS = [
+     "http://192.168.1.128:8000",
 #     "https://192.168.1.128",
-#     # Add any other origins you want to allow
-# ]
+     "http://localhost:3000",
+     "http://localhost:8000",
+     "http://localhost",
+     "http://frontend:3000",  # Allow the frontend container
+     "http://frontend:80",    # Allow the frontend container in production
+     # Add any other origins you want to allow
+]
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -173,4 +184,11 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": os.environ.get('REDIS_URL', 'redis://redis:6379/1'),
+    }
 }
