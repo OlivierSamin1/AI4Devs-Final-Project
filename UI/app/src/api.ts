@@ -1,33 +1,33 @@
-   import axios from 'axios';
+    import axios from 'axios';
 
     // Base URL for the API
     const API_URL = '/api';
 
-    // Interface for Reservation data
-    export interface Reservation {
+    // Interface for Symptom data
+    export interface Symptom {
       id: number;
-      asset_id: number;
-      asset_name: string;
-      platform_id: number;
-      platform_name: string;
-      reservation_number: string;
-      entry_date: string;
-      end_date: string;
-      number_of_nights: number;
-      renting_person_full_name: string;
-      price: string;
-      created_at: string;
+      name: string;
+      child: boolean;
+      adult: boolean;
+      products: Product[];
+      comments: Record<string, string> | null;
     }
 
-    // Function to fetch reservations
-    export const fetchReservations = async (month: number = 2, year: number = 2025): Promise<Reservation[]> => {
+    // Interface for Product data
+    export interface Product {
+      id: number;
+      name: string;
+    }
+
+    // Function to fetch symptoms
+    export const fetchSymptoms = async (): Promise<Symptom[]> => {
       try {
-        const response = await axios.get(`${API_URL}/api/reservations/`, {
-          params: { month, year }
-        });
+        const response = await axios.get(`${API_URL}/api/health/symptoms/`);
         return response.data;
       } catch (error) {
-        console.error('Error fetching reservations:', error);
+        console.error('Error fetching symptoms:', error);
         throw error;
       }
     };
+
+    // ... existing code for other API functions ...
