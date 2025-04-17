@@ -45,23 +45,21 @@ We'll use Docker to containerize our entire application stack for easier deploym
 
 1. Create a project directory structure:
    ```bash
-   mkdir -p ~/personal-db-assistant
-   cd ~/personal-db-assistant
-   mkdir -p backend frontend nginx redis
+   mkdir -p ~/AI4Devs-Final-Project
+   cd ~/AI4Devs-Final-Project
+   mkdir -p jarvis UI
    ```
 
 ## Backend Container Configuration
 
 Instead of creating a new Django application, we'll use the existing backend application that already has the Health app with the Symptom model. We'll set up a Docker container for it.
 
-1. Clone the existing backend repository:
+1. Set up the backend directory:
    ```bash
-   cd ~/personal-db-assistant
-   git clone [REPOSITORY_URL] backend
-   cd backend
+   cd ~/AI4Devs-Final-Project/jarvis
    ```
 
-2. Create a Dockerfile for the existing backend:
+2. Create a Dockerfile for the backend (if not already present):
    ```bash
    nano Dockerfile
    ```
@@ -124,7 +122,7 @@ Instead of creating a new Django application, we'll use the existing backend app
    REDIS_URL=redis://redis:6379/1
    ```
 
-7. Create or update the project's settings to work with the containerized setup. This might involve creating a separate settings file for Docker or modifying the existing settings:
+7. Create or update the project's settings to work with the containerized setup:
 
    ```bash
    nano jarvis/settings.py
@@ -163,106 +161,22 @@ Instead of creating a new Django application, we'll use the existing backend app
    }
    ```
 
-8. Ensure the Health app has a properly configured API endpoint for Symptoms. If it doesn't exist, create a REST API endpoint.
-
-   First, check if the app already has serializers:
-   ```bash
-   ls jarvis/health/serializers.py
-   ```
+8. Ensure the Health app has a properly configured API endpoint for Symptoms:
    
-   If not, create one:
-   ```bash
-   nano jarvis/health/serializers.py
-   ```
-   
-   Add the following content:
+   The API endpoints are defined in `jarvis/health/api/urls.py`. The endpoint structure should be:
    ```python
-   from rest_framework import serializers
-   from .models.symptom import Symptom
-   from .models.product import Product
-   
-   class ProductSerializer(serializers.ModelSerializer):
-       class Meta:
-           model = Product
-           fields = ['id', 'name']
-   
-   class SymptomSerializer(serializers.ModelSerializer):
-       products = ProductSerializer(many=True, read_only=True)
-       
-       class Meta:
-           model = Symptom
-           fields = ['id', 'name', 'child', 'adult', 'products', 'comments']
+   router.register(r'symptoms', SymptomViewSet, basename='symptom')
    ```
 
-9. Create or update the API views for the Health app:
+9. Test the API endpoint by running the development server:
    ```bash
-   nano jarvis/health/views.py
+   cd ~/AI4Devs-Final-Project
+   ./start_api.sh
    ```
    
-   Add the following content:
-   ```python
-   from rest_framework import viewsets
-   from rest_framework.response import Response
-   from .models.symptom import Symptom
-   from .serializers import SymptomSerializer
-   from django.views.decorators.cache import cache_page
-   from django.utils.decorators import method_decorator
+   And accessing: http://localhost:8000/api/health/symptoms/
    
-   class SymptomViewSet(viewsets.ReadOnlyModelViewSet):
-       queryset = Symptom.objects.all().prefetch_related('products')
-       serializer_class = SymptomSerializer
-       
-       @method_decorator(cache_page(60 * 5))  # Cache for 5 minutes
-       def list(self, request, *args, **kwargs):
-           return super().list(request, *args, **kwargs)
-       
-       @method_decorator(cache_page(60 * 5))
-       def retrieve(self, request, *args, **kwargs):
-           return super().retrieve(request, *args, **kwargs)
-   ```
-
-10. Add URL patterns for the API:
-    ```bash
-    nano jarvis/health/urls.py
-    ```
-    
-    Add the following content:
-    ```python
-    from django.urls import path, include
-    from rest_framework.routers import DefaultRouter
-    from .views import SymptomViewSet
-    
-    router = DefaultRouter()
-    router.register(r'symptoms', SymptomViewSet)
-    
-    urlpatterns = [
-        path('', include(router.urls)),
-    ]
-    ```
-
-11. Finally, include the Health app URLs in the main project URLs:
-    ```bash
-    nano jarvis/urls.py
-    ```
-    
-    Ensure the following pattern is included:
-    ```python
-    urlpatterns = [
-        # ... other patterns ...
-        path('api/health/', include('jarvis.health.urls')),
-    ]
-    ```
-
-12. Test the API endpoint by running the development server:
-    ```bash
-    python manage.py runserver
-    ```
-    
-    And accessing: http://localhost:8000/api/health/symptoms/
-    
-    If everything works as expected, you can stop the development server.
-
-These steps configure the existing backend application to work within a Docker container and expose the necessary API endpoints for our frontend to consume the Symptoms data.
+   If everything works as expected, you can stop the development server.
 
 ## Frontend Container Implementation
 
@@ -270,12 +184,12 @@ Now we'll create a separate React frontend container that will communicate with 
 
 1. Navigate to the frontend directory:
    ```bash
-   cd ~/personal-db-assistant/frontend
+   cd ~/AI4Devs-Final-Project/UI
    ```
 
-2. Create a Dockerfile for the React frontend:
+2. Create a Dockerfile for the React frontend (if not already present):
    ```bash
-   nano Dockerfile
+   nano Dokerfile
    ```
 
 3. Add the following content:
@@ -348,10 +262,9 @@ Now we'll create a separate React frontend container that will communicate with 
    docker run --rm -v $(pwd):/app -w /app node:18-alpine npm install axios bootstrap react-bootstrap react-router-dom
    ```
 
-9. Create a src/api.ts file:
+9. Create the api.ts file in the app/src directory:
    ```bash
-   mkdir -p src
-   nano src/api.ts
+   nano app/src/api.ts
    ```
 
 10. Add the following content:
@@ -380,7 +293,7 @@ Now we'll create a separate React frontend container that will communicate with 
     // Function to fetch symptoms
     export const fetchSymptoms = async (): Promise<Symptom[]> => {
       try {
-        const response = await axios.get(`${API_URL}/api/symptoms/`);
+        const response = await axios.get(`${API_URL}/api/health/symptoms/`);
         return response.data;
       } catch (error) {
         console.error('Error fetching symptoms:', error);
@@ -389,14 +302,14 @@ Now we'll create a separate React frontend container that will communicate with 
     };
     ```
 
-11. Create a src/components directory:
+11. Create a components directory if it doesn't exist:
     ```bash
-    mkdir -p src/components
+    mkdir -p app/src/components
     ```
 
 12. Create a SymptomTable component:
     ```bash
-    nano src/components/SymptomTable.tsx
+    nano app/src/components/SymptomTable.tsx
     ```
 
 13. Add the following content:
@@ -471,12 +384,12 @@ Now we'll create a separate React frontend container that will communicate with 
     export default SymptomTable;
     ```
 
-14. Create the App component:
+14. Update the existing App component:
     ```bash
-    nano src/App.tsx
+    nano app/src/App.tsx
     ```
 
-15. Add the following content:
+15. Replace the content with the following:
     ```tsx
     import React from 'react';
     import 'bootstrap/dist/css/bootstrap.min.css';
@@ -510,12 +423,12 @@ Now we'll create a separate React frontend container that will communicate with 
     export default App;
     ```
 
-16. Create a simple CSS file for the App:
+16. Update the existing App.css file:
     ```bash
-    nano src/App.css
+    nano app/src/App.css
     ```
 
-17. Add some basic styles:
+17. Replace the content with the following styles:
     ```css
     .App {
       min-height: 100vh;
@@ -545,42 +458,46 @@ Now we'll create a separate React frontend container that will communicate with 
     }
     ```
 
-18. Update the main.tsx file (Vite uses main.tsx instead of index.tsx):
+18. Verify the structure of main.tsx file:
     ```bash
-    nano src/main.tsx
+    nano app/src/main.tsx
     ```
 
-19. Replace with the following content:
+19. If needed, update main.tsx with the following content (if it differs significantly):
     ```tsx
-    import React from 'react'
-    import ReactDOM from 'react-dom/client'
-    import App from './App.tsx'
+    import { StrictMode } from 'react'
+    import { createRoot } from 'react-dom/client'
     import './index.css'
+    import App from './App.tsx'
 
-    ReactDOM.createRoot(document.getElementById('root')!).render(
-      <React.StrictMode>
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
         <App />
-      </React.StrictMode>,
+      </StrictMode>,
     )
     ```
 
-20. Update the vite.config.ts file:
+20. Update the api.ts file to include any additional API functions needed:
     ```bash
-    nano vite.config.ts
+    nano app/src/api.ts
     ```
 
-21. Add the following content:
+21. Modify vite.config.ts to include the API proxy:
+    ```bash
+    nano app/vite.config.ts
+    ```
+    
     ```typescript
     import { defineConfig } from 'vite'
     import react from '@vitejs/plugin-react'
 
-    // https://vitejs.dev/config/
+    // https://vite.dev/config/
     export default defineConfig({
       plugins: [react()],
       server: {
         proxy: {
           '/api': {
-            target: 'http://backend:8000',
+            target: 'http://localhost:8000',
             changeOrigin: true
           }
         }
@@ -588,95 +505,11 @@ Now we'll create a separate React frontend container that will communicate with 
     })
     ```
 
-## Redis Container Configuration
-
-1. Navigate to the redis directory:
-   ```bash
-   cd ~/personal-db-assistant/redis
-   ```
-
-2. Create a custom redis.conf file:
-   ```bash
-   nano redis.conf
-   ```
-
-3. Add the following configuration:
-   ```
-   # Basic configuration
-   port 6379
-   bind 0.0.0.0
-   protected-mode yes
-   requirepass redispassword
-
-   # Limits
-   maxmemory 256mb
-   maxmemory-policy allkeys-lru
-
-   # Persistence
-   save 900 1
-   save 300 10
-   save 60 10000
-   ```
-
-## Nginx Container Configuration
-
-1. Navigate to the nginx directory:
-   ```bash
-   cd ~/personal-db-assistant/nginx
-   ```
-
-2. Create a Dockerfile for Nginx:
-   ```bash
-   nano Dockerfile
-   ```
-
-3. Add the following content:
-   ```dockerfile
-   FROM nginx:alpine
-
-   COPY ./default.conf /etc/nginx/conf.d/default.conf
-   ```
-
-4. Create a Nginx configuration file:
-   ```bash
-   nano default.conf
-   ```
-
-5. Add the following configuration:
-   ```nginx
-   # Main proxy server for the application
-   server {
-       listen 80;
-       server_name localhost;
-
-       # Serve static files directly from the backend
-       location /static/ {
-           proxy_pass http://backend:8000/static/;
-       }
-
-       # Pass API requests to the backend
-       location /api/ {
-           proxy_pass http://backend:8000;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-       }
-
-       # Route all other requests to the frontend
-       location / {
-           proxy_pass http://frontend:80;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-       }
-   }
-   ```
-
 ## Docker Compose Setup
 
 1. Navigate back to the project root:
    ```bash
-   cd ~/personal-db-assistant
+   cd ~/AI4Devs-Final-Project
    ```
 
 2. Create a docker-compose.yml file:
@@ -691,13 +524,13 @@ Now we'll create a separate React frontend container that will communicate with 
    services:
      # Backend API service
      backend:
-       build: ./backend
+       build: ./jarvis
        restart: always
        volumes:
          - static_volume:/app/staticfiles
          - backend_data:/app/data
        env_file:
-         - ./backend/.env
+         - ./jarvis/.env
        depends_on:
          - redis
        expose:
@@ -707,7 +540,7 @@ Now we'll create a separate React frontend container that will communicate with 
 
      # Frontend service
      frontend:
-       build: ./frontend
+       build: ./UI
        restart: always
        depends_on:
          - backend
@@ -718,7 +551,6 @@ Now we'll create a separate React frontend container that will communicate with 
 
      # Redis service for caching
      redis:
-       build: ./redis
        image: redis:alpine
        restart: always
        command: redis-server /usr/local/etc/redis/redis.conf

@@ -117,7 +117,7 @@ You are a senior product manager and  a senior business analyst.
 3. use @00_integration_documentation_summary.md to generate one by one all the documents  in the folder @database_integration_documentation 
 
 
-**Prompt2 **:
+**Prompt2**:
 Before generating the other documents, I forgot 2 very important information for my project:
 1. I will need to add a data-privacy-vault for my actual database
 2. I will need to make a demo so I will need to generate synthetic data that will be accessibleonly for the demo.
@@ -151,3 +151,4 @@ You have to update the documentation @03_final_project.md to ensure that the fol
 
 **Prompt 5**:
 You dockerized only the backend, I want the whole project dockeriezd, so it means also the front end. Update all the files @03_final_project.md and the repo @implementation_steps 
+
