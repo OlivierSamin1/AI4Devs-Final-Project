@@ -22,9 +22,19 @@ from rest_framework.authtoken import views
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+import logging
+from django.http import HttpResponse
+
+logger = logging.getLogger(__name__)
+
+def basic_test(request):
+    """A basic view that returns a simple HTTP response for debugging."""
+    logger.info(f"Basic test accessed: {request.path}, Method: {request.method}, Headers: {request.headers}")
+    return HttpResponse("Basic test view is working", content_type="text/plain")
 
 @api_view(['GET'])
 def api_root(request):
+    logger.info(f"API root accessed: {request.path}, Method: {request.method}, Headers: {request.headers}")
     return Response({
         'status': 'OK',
         'message': 'Jarvis API is running'
@@ -33,20 +43,29 @@ def api_root(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_test(request):
-    return Response({
-        'status': 'OK',
-        'message': 'API test endpoint is working'
-    })
+    logger.info(f"API test accessed: {request.path}, Method: {request.method}, Headers: {request.headers}")
+    try:
+        return Response({
+            'status': 'OK',
+            'message': 'API test endpoint is working'
+        })
+    except Exception as e:
+        logger.error(f"Error in api_test: {str(e)}")
+        raise
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     
+    # Basic test view
+    path('basic-test/', basic_test),
+    
     # API root endpoint
     path('', api_root),
     
-    # Test API endpoint
+    # Test API endpoint - add multiple versions to test different URL patterns
     path('api/test/', api_test),
+    path('test/', api_test),  # Try without the /api prefix
     
     # API endpoints
     path('api/administrative/', include('administrative.api.urls')),
