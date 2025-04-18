@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Base URL for the API - remove trailing slash if it exists
+// Base URL for the API
 const API_URL = '/api';
 
 // Authentication token from the Django backend
@@ -10,9 +10,28 @@ const API_TOKEN = '11d3acee94a184b88afa091ed3df7ef71850bffd';
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
-    'Authorization': `Token ${API_TOKEN}`
+    'Authorization': `Token ${API_TOKEN}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
 });
+
+// Add response interceptor for debugging
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    console.error('API Error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url,
+      method: error.config?.method
+    });
+    return Promise.reject(error);
+  }
+);
 
 // Interface for Reservation data
 export interface Reservation {

@@ -19,10 +19,22 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.authtoken import views
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(['GET'])
+def api_root(request):
+    return Response({
+        'status': 'OK',
+        'message': 'Jarvis API is running'
+    })
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
+    
+    # API root endpoint
+    path('', api_root),
     
     # API endpoints
     path('api/administrative/', include('administrative.api.urls')),
