@@ -33,14 +33,7 @@ class SymptomViewSet(viewsets.ModelViewSet):
     queryset = Symptom.objects.all()
     serializer_class = SymptomSerializer
     filterset_class = SymptomFilter
-    
-    def get_permissions(self):
-        """
-        Allow anonymous access for read-only operations.
-        """
-        if self.action in ['list', 'retrieve', 'products']:
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
+    permission_classes = [permissions.AllowAny]  # Allow any access for debugging
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
