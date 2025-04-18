@@ -35,7 +35,8 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     '192.168.1.129',  # Your Raspberry Pi's IP address
-    'jarvis'
+    'jarvis',
+    'jarvis.localhost'
 ]
 
 
@@ -163,6 +164,7 @@ CORS_ALLOWED_ORIGINS = [
      "http://localhost",
      "http://frontend:3000",  # Allow the frontend container
      "http://frontend:80",    # Allow the frontend container in production
+     "http://jarvis.localhost",  # Allow the jarvis.localhost domain
      # Add any other origins you want to allow
 ]
 
