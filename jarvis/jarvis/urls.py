@@ -27,10 +27,20 @@ from django.http import HttpResponse
 
 logger = logging.getLogger(__name__)
 
+def super_basic_test(request):
+    """An absolute minimal view that just returns a string with no dependencies."""
+    return HttpResponse("OK", content_type="text/plain")
+
 def basic_test(request):
     """A basic view that returns a simple HTTP response for debugging."""
-    logger.info(f"Basic test accessed: {request.path}, Method: {request.method}, Headers: {request.headers}")
-    return HttpResponse("Basic test view is working", content_type="text/plain")
+    try:
+        logger.info(f"Basic test accessed: {request.path}, Method: {request.method}")
+        logger.info(f"Request headers: {request.headers}")
+        logger.info(f"Request META: {request.META}")
+        return HttpResponse("Basic test view is working", content_type="text/plain")
+    except Exception as e:
+        logger.error(f"Error in basic_test: {str(e)}")
+        return HttpResponse(f"Error: {str(e)}", content_type="text/plain", status=500)
 
 @api_view(['GET'])
 def api_root(request):
@@ -57,7 +67,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     
-    # Basic test view
+    # Basic test views
+    path('super-basic-test/', super_basic_test),
     path('basic-test/', basic_test),
     
     # API root endpoint

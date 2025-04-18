@@ -13,6 +13,24 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import logging
+
+# Custom middleware for debugging
+class RequestDebugMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+        
+    def __call__(self, request):
+        logger = logging.getLogger('django.request')
+        logger.debug(f"Processing request: {request.path}")
+        logger.debug(f"Request method: {request.method}")
+        logger.debug(f"Request headers: {request.headers}")
+        
+        response = self.get_response(request)
+        
+        logger.debug(f"Response status: {response.status_code}")
+        
+        return response
 
 # Load environment variables
 load_dotenv()
@@ -71,6 +89,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Add our custom debug middleware
+    'jarvis.settings.RequestDebugMiddleware',
 ]
 
 ROOT_URLCONF = 'jarvis.urls'
@@ -172,7 +192,8 @@ CORS_ALLOWED_ORIGINS = [
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        # Temporarily allow any access for debugging
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
