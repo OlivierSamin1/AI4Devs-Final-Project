@@ -33,23 +33,42 @@ We are experiencing a persistent 400 Bad Request error when attempting to access
 7. **Basic Test Endpoint**:
    - Added a basic test view to the Django application to confirm that the application is capable of returning a simple HTTP response.
 
-### Next Steps
-The last change made to the Django application needs to be tested on the Raspberry Pi 4 to confirm whether the 400 Bad Request error persists. This will help determine if the issue is related to the application configuration or if there are other underlying problems that need to be addressed.
+8. **Applied Configuration Patch**:
+   - Created a patch script (`patch_settings.py`) to directly modify the Django settings inside the container.
+   - The script sets `DEBUG=True`, adds all necessary hosts to `ALLOWED_HOSTS`, enables CORS for all origins, and sets the default permission class to `AllowAny`.
+   - The script also updated the URLs configuration to include simplified debug views.
+   - Successfully copied the patch script to the container with `docker compose cp patch_settings.py backend:/app/`.
+   - Successfully executed the patch script inside the container with `docker compose exec backend python /app/patch_settings.py`.
 
-#### Testing Commands
-1. **Test the basic endpoint** to see if it's working:
+### Next Steps
+Now that we've applied the patch to simplify the Django configuration and enable debugging, we need to verify if this resolves the 400 Bad Request issue:
+
+1. **Test the basic endpoints** to verify basic functionality:
    ```bash
    curl http://jarvis.localhost/basic-test/
+   curl http://jarvis.localhost/debug/
    ```
 
-2. **Test the API test endpoint** to see if it returns a successful response:
+2. **Test the API endpoints** with and without authentication:
    ```bash
    curl http://jarvis.localhost/api/test/
-   ```
-
-3. **Test the symptoms endpoint** with authentication to see if it still returns a 400 error:
-   ```bash
+   curl http://jarvis.localhost/api/health/symptoms/
    curl -H "Authorization: Token 11d3acee94a184b88afa091ed3df7ef71850bffd" http://jarvis.localhost/api/health/symptoms/
    ```
 
-After running these commands, check the responses you receive. If any of the endpoints return a 400 error, we can further investigate based on the output.
+3. **Check container logs** if issues persist:
+   ```bash
+   docker compose logs backend
+   ```
+
+4. **Review NGINX logs** for any proxy-related issues:
+   ```bash
+   docker compose logs nginx
+   ```
+
+5. **Restart containers** if necessary to ensure all changes take effect:
+   ```bash
+   docker compose restart backend nginx
+   ```
+
+After running these tests, we should have a clearer picture of whether the issue has been resolved or if further debugging is required. If the 400 error persists, we'll need to analyze the logs to identify any specific error messages or patterns.
