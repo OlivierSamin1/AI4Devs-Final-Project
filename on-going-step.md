@@ -35,3 +35,21 @@ We are experiencing a persistent 400 Bad Request error when attempting to access
 
 ### Next Steps
 The last change made to the Django application needs to be tested on the Raspberry Pi 4 to confirm whether the 400 Bad Request error persists. This will help determine if the issue is related to the application configuration or if there are other underlying problems that need to be addressed.
+
+#### Testing Commands
+1. **Test the basic endpoint** to see if it's working:
+   ```bash
+   curl http://jarvis.localhost/basic-test/
+   ```
+
+2. **Test the API test endpoint** to see if it returns a successful response:
+   ```bash
+   curl http://jarvis.localhost/api/test/
+   ```
+
+3. **Test the symptoms endpoint** with authentication to see if it still returns a 400 error:
+   ```bash
+   curl -H "Authorization: Token 11d3acee94a184b88afa091ed3df7ef71850bffd" http://jarvis.localhost/api/health/symptoms/
+   ```
+
+After running these commands, check the responses you receive. If any of the endpoints return a 400 error, we can further investigate based on the output.
