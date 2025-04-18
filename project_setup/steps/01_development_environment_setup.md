@@ -64,13 +64,13 @@ mkdir -p personal_db_assistant
 
 # Create directories for each component
 cd personal_db_assistant
-mkdir -p backend frontend data_privacy_vault email_processor document_processor ai_assistant nginx redis postgres
+mkdir -p backend frontend data_privacy_vault email_processor document_processor ai_assistant nginx redis
 
 # Create Docker configuration directory
 mkdir -p docker
 
 # Create volumes directory for persistent data
-mkdir -p volumes/{postgres,redis,uploads,documents}
+mkdir -p volumes/{redis,uploads,documents}
 ```
 
 ## Step 3: Set Up Docker Configuration Files
@@ -83,7 +83,7 @@ Create a `docker-compose.yml` file in the docker directory:
 touch docker/docker-compose.yml
 ```
 
-Edit the file with the following configuration:
+Edit the file with the following configuration, which connects to the existing PostgreSQL database:
 
 ```yaml
 version: '3.8'
@@ -97,11 +97,10 @@ services:
     container_name: pda_backend
     restart: unless-stopped
     depends_on:
-      - postgres
       - redis
     environment:
       - DJANGO_SETTINGS_MODULE=core.settings.development
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/personal_db
+      - DATABASE_URL=postgres://postgres:postgres@192.168.1.128:5432/personal_db
       - REDIS_URL=redis://redis:6379/0
     volumes:
       - ../backend:/app
@@ -128,22 +127,6 @@ services:
       - frontend_network
     depends_on:
       - backend
-
-  # Postgres database
-  postgres:
-    image: postgres:14
-    container_name: pda_postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=personal_db
-    volumes:
-      - ../volumes/postgres:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - backend_network
 
   # Redis service
   redis:
@@ -185,11 +168,10 @@ services:
     command: celery -A core worker -l info
     depends_on:
       - redis
-      - postgres
       - backend
     environment:
       - DJANGO_SETTINGS_MODULE=core.settings.development
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/personal_db
+      - DATABASE_URL=postgres://postgres:postgres@192.168.1.128:5432/personal_db
       - REDIS_URL=redis://redis:6379/0
     volumes:
       - ../backend:/app
@@ -201,127 +183,31 @@ networks:
     driver: bridge
   backend_network:
     driver: bridge
+    # This enables communication with the external database on Raspberry Pi 3B
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"
 ```
 
-## Step 4: Set Up Database Simulation
+## Step 4: Verify Database Connection
 
-For local development, we'll simulate the two-device architecture (Raspberry Pi 3B and 4) by using separate Docker containers.
-
-### Create Database Service Dockerfile
+Before proceeding, let's verify that we can connect to the existing PostgreSQL database on the Raspberry Pi 3B:
 
 ```bash
-touch postgres/Dockerfile
+# Install PostgreSQL client tools if not already installed
+sudo apt install postgresql-client -y
+
+# Test connection to the database
+psql -h 192.168.1.128 -U postgres -d personal_db
+# Enter the PostgreSQL password when prompted
 ```
 
-Edit the file with the following content:
+If the connection is successful, you'll see the PostgreSQL prompt. Type `\q` to exit.
 
-```dockerfile
-FROM postgres:14
-
-# Add initialization scripts
-COPY ./init-scripts/ /docker-entrypoint-initdb.d/
-
-# Expose PostgreSQL port
-EXPOSE 5432
-```
-
-Create a directory for initialization scripts:
-
-```bash
-mkdir -p postgres/init-scripts
-touch postgres/init-scripts/01-create-tables.sql
-```
-
-Add basic table creation script:
-
-```sql
--- Create basic schema for Personal Database Assistant
-CREATE SCHEMA IF NOT EXISTS personal_data;
-
--- Create users table
-CREATE TABLE IF NOT EXISTS personal_data.users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(100) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create assets table
-CREATE TABLE IF NOT EXISTS personal_data.assets (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES personal_data.users(id),
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    asset_type VARCHAR(100) NOT NULL,
-    value DECIMAL(15, 2),
-    acquisition_date DATE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create financial_accounts table
-CREATE TABLE IF NOT EXISTS personal_data.financial_accounts (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES personal_data.users(id),
-    account_name VARCHAR(255) NOT NULL,
-    institution VARCHAR(255),
-    account_type VARCHAR(100) NOT NULL,
-    balance DECIMAL(15, 2),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create transactions table
-CREATE TABLE IF NOT EXISTS personal_data.transactions (
-    id SERIAL PRIMARY KEY,
-    account_id INTEGER REFERENCES personal_data.financial_accounts(id),
-    transaction_date DATE NOT NULL,
-    amount DECIMAL(15, 2) NOT NULL,
-    description TEXT,
-    category VARCHAR(100),
-    transaction_type VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create documents table
-CREATE TABLE IF NOT EXISTS personal_data.documents (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES personal_data.users(id),
-    title VARCHAR(255) NOT NULL,
-    document_type VARCHAR(100) NOT NULL,
-    file_path VARCHAR(255) NOT NULL,
-    upload_date DATE NOT NULL,
-    metadata JSONB,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create security schema for the Data Privacy Vault
-CREATE SCHEMA IF NOT EXISTS security;
-
--- Create sensitive_data table in security schema
-CREATE TABLE IF NOT EXISTS security.sensitive_data (
-    id SERIAL PRIMARY KEY,
-    token VARCHAR(255) UNIQUE NOT NULL,
-    data_type VARCHAR(100) NOT NULL,
-    encrypted_data BYTEA NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create access_log table in security schema
-CREATE TABLE IF NOT EXISTS security.access_log (
-    id SERIAL PRIMARY KEY,
-    token VARCHAR(255) NOT NULL,
-    access_time TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    user_id INTEGER,
-    purpose VARCHAR(100) NOT NULL,
-    access_type VARCHAR(50) NOT NULL
-);
-```
+If you encounter connection issues, verify that:
+1. The Raspberry Pi 3B is powered on and connected to your network
+2. The PostgreSQL container is running on the Raspberry Pi 3B
+3. PostgreSQL is configured to accept remote connections
+4. Any firewall on the Raspberry Pi 3B allows connections to port 5432
 
 ## Step 5: Setup the Backend Django Project
 
@@ -410,6 +296,200 @@ djangorestframework-simplejwt==5.2.2
 # Utilities
 django-filter==23.2
 Pillow==9.5.0
+```
+
+### Configure Django Database Settings
+
+Create a Django settings module that connects to the existing PostgreSQL database:
+
+```bash
+mkdir -p core/settings
+touch core/settings/__init__.py
+touch core/settings/base.py
+touch core/settings/development.py
+touch core/settings/production.py
+```
+
+Add the following code to `core/settings/base.py`:
+
+```python
+import os
+from pathlib import Path
+from datetime import timedelta
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-default-dev-key')
+
+# Application definition
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    
+    # Third-party apps
+    'rest_framework',
+    'corsheaders',
+    'django_filters',
+    'rest_framework_simplejwt',
+    
+    # Local apps
+    'api',
+]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'core.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'core.wsgi.application'
+
+# Database Configuration - connecting to existing PostgreSQL on Raspberry Pi 3B
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'personal_db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
+        'HOST': os.environ.get('DB_HOST', '192.168.1.128'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
+    }
+}
+
+# Password validation
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+# Internationalization
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
+
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
+}
+
+# JWT Settings
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+}
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # Change this in production
+
+# Celery settings
+CELERY_BROKER_URL = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('REDIS_URL', 'redis://redis:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+```
+
+Add the following code to `core/settings/development.py`:
+
+```python
+from .base import *
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+ALLOWED_HOSTS = ['*']
+
+# CORS settings for development
+CORS_ALLOW_ALL_ORIGINS = True
+```
+
+Add the following code to `core/settings/production.py`:
+
+```python
+from .base import *
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = False
+
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']  # Add your domain or IP
+
+# HTTPS settings
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+# CORS settings for production
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "https://yourdomain.com",
+]
 ```
 
 ## Step 6: Setup the Frontend React Project
@@ -619,7 +699,38 @@ ehthumbs.db
 Desktop.ini
 ```
 
-## Step 9: Verify Setup
+## Step 9: Create Environment Files
+
+Create environment files to store configuration values:
+
+```bash
+# Create .env file
+touch .env
+```
+
+Add the following content to the .env file:
+
+```
+# Database configuration (connecting to existing PostgreSQL on Raspberry Pi 3B)
+DB_NAME=personal_db
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=192.168.1.128
+DB_PORT=5432
+
+# Redis configuration
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# Django configuration
+DJANGO_SETTINGS_MODULE=core.settings.development
+DJANGO_SECRET_KEY=development_secret_key_change_in_production
+
+# API keys for service-to-service communication (if needed)
+API_KEY_BACKEND_TO_DPV=backend_to_dpv_secret_key
+```
+
+## Step a: Verify Setup
 
 Test your setup by running Docker Compose:
 
@@ -634,9 +745,13 @@ docker-compose up -d
 docker-compose ps
 ```
 
-You should see all containers running without any errors.
+You should see all containers running without any errors. If any containers fail to start, check the logs:
 
-## Step 10: Access the Applications
+```bash
+docker-compose logs
+```
+
+## Step b: Access the Applications
 
 - Django backend: http://localhost:8000
 - React frontend: http://localhost:3000
@@ -645,4 +760,4 @@ You should see all containers running without any errors.
 
 ## Next Steps
 
-Now that your development environment is set up, you can proceed to [Container Infrastructure Setup](./02_container_infrastructure_setup.md) to configure all the Docker containers and services required for the Personal Database Assistant. 
+Now that your development environment is set up and connected to the existing PostgreSQL database on Raspberry Pi 3B, proceed to [Container Infrastructure Setup](./02_container_infrastructure_setup.md) to configure all the Docker containers and services required for the Personal Database Assistant. 

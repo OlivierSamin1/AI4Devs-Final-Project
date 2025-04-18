@@ -8,4 +8,13 @@
 4. refactoring again my database because trying building tests results in finding a structural error in my project: 3h
 5. Trying to use QEMU to perform test directly with my local machine (x86 architecture): 3h and I stopped here
 6. creating tests for my actual relifted databse (new structure and refactorized): 2h 
-7. starting the POC setup: 1h
+7. starting the POC setup: 6h
+  a. setup the rpi again partially: 3h
+  b. update POC to use another model than the first one: 0.5h
+  c. dockerization backend: 1h
+  d. dockerization front end: 1.5h
+  e. dockerization all project: 3h
+
+8. changing POC to local and then migrate to RPI4
+  a. create a documentation: 1h
+  

@@ -5,10 +5,10 @@ This implementation plan outlines the step-by-step process for setting up the Pe
 ## Overview
 
 The Personal Database Assistant is a secure, internet-accessible interface to an offline personal database. It uses a two-device architecture:
-- **Database Server (Raspberry Pi 3B)**: Hosts PostgreSQL and maintains offline security
+- **Database Server (Raspberry Pi 3B)**: Already set up with PostgreSQL running in a Docker container at IP address 192.168.1.128
 - **Web Application Server (Raspberry Pi 4)**: Internet-facing component with containerized services
 
-For development efficiency, we'll first implement everything on your local machine using Docker containers, then transfer the working solution to the Raspberry Pis.
+For development efficiency, we'll first implement everything on your local machine using Docker containers, then transfer the solution to Raspberry Pi 4 while connecting to the existing database on Raspberry Pi 3B.
 
 ## Implementation Phases
 
@@ -16,15 +16,18 @@ For development efficiency, we'll first implement everything on your local machi
 1. [Development Environment Setup](./01_development_environment_setup.md)
    - Setting up Docker, Docker Compose, and necessary development tools
    - Creating project directory structure
+   - Configuring connection to existing PostgreSQL database on Raspberry Pi 3B
 
 2. [Container Infrastructure Setup](./02_container_infrastructure_setup.md)
    - Creating Docker Compose configuration
    - Setting up base container images for all services
+   - Configuring network to connect to existing database
 
 ### Phase 2: Core Application Development
 3. [Backend API Development](./03_backend_api_development.md)
    - Creating Django REST Framework application
-   - Setting up database models and API endpoints
+   - Configuring database connection to the existing PostgreSQL instance
+   - Setting up API endpoints
 
 4. [Frontend Development](./04_frontend_development.md)
    - Building React application with TypeScript
@@ -33,6 +36,7 @@ For development efficiency, we'll first implement everything on your local machi
 5. [Data Privacy Vault Implementation](./05_data_privacy_vault.md)
    - Setting up sensitive data storage and access controls
    - Implementing data tokenization and encryption
+   - Configuring connection to existing database
 
 ### Phase 3: Integrations and Advanced Features
 6. [AI Integration](./06_ai_integration.md)
@@ -47,17 +51,17 @@ For development efficiency, we'll first implement everything on your local machi
    - OCR capabilities
    - Document classification and data extraction
 
-### Phase 4: Local to Raspberry Pi Migration
-9. [Raspberry Pi Setup](./09_raspberry_pi_setup.md)
-   - Setting up Raspberry Pi 3B and 4
-   - Configuring network and firewall settings
+### Phase 4: Raspberry Pi 4 Deployment
+9. [Raspberry Pi 4 Setup](./09_raspberry_pi_setup.md)
+   - Setting up Raspberry Pi 4
+   - Configuring network to connect to existing Raspberry Pi 3B database
 
-10. [Deployment to Raspberry Pi](./10_raspberry_pi_deployment.md)
+10. [Deployment to Raspberry Pi 4](./10_raspberry_pi_deployment.md)
     - Transferring containers to Raspberry Pi 4
-    - Database setup on Raspberry Pi 3B
+    - Configuring connection to existing PostgreSQL on Raspberry Pi 3B
 
 11. [Network Configuration](./11_network_configuration.md)
-    - Setting up secure communication between devices
+    - Setting up secure communication between Raspberry Pi 4 and existing Raspberry Pi 3B database
     - Configuring internet access and SSL certificates
 
 ### Phase 5: Security and Optimization
@@ -73,13 +77,13 @@ For development efficiency, we'll first implement everything on your local machi
     - Setting up container monitoring
     - Implementing backup and recovery procedures
 
-## Key Considerations for Local-to-Pi Migration
+## Key Considerations for Development and Deployment
 
-1. **Architecture Consistency**: Use the same container structure locally as will be used on the Raspberry Pi.
+1. **External Database Connection**: Configure all services to connect to the existing PostgreSQL database on Raspberry Pi 3B at IP 192.168.1.128.
 2. **Platform-Specific Images**: Ensure Docker images support both your development platform and ARM architecture.
 3. **Resource Constraints**: Be mindful of the Raspberry Pi's limited resources when developing.
-4. **Network Simulation**: Simulate the two-device architecture locally using separate Docker networks.
+4. **Security**: Ensure secure communication between Raspberry Pi 4 and the database on Raspberry Pi 3B.
 
 ## Next Steps
 
-Begin with the [Development Environment Setup](./01_development_environment_setup.md) to start implementing your Personal Database Assistant. 
+Begin with the [Development Environment Setup](./01_development_environment_setup.md) to start implementing your Personal Database Assistant, connecting to your existing database. 
