@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Base URL for the API
+// Base URL for the API - remove trailing slash if it exists
 const API_URL = '/api';
 
 // Authentication token from the Django backend
@@ -57,7 +57,7 @@ export interface Product {
 // Function to fetch reservations
 export const fetchReservations = async (month: number = 2, year: number = 2025): Promise<Reservation[]> => {
   try {
-    const response = await apiClient.get(`/api/reservations/`, {
+    const response = await apiClient.get(`/real_estate/reservations/`, {
       params: { month, year }
     });
     return response.data;

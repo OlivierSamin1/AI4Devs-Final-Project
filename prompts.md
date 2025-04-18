@@ -173,3 +173,6 @@ The actual behaviour is as follow:
 I know that in the corresponding nginx file it is setup as localhost and not jarvis.localhost.
 
 Fix this
+
+**Prompt 3 - using the MCP browser-tools**: 
+That's good, now we need to fix the bad request issue. Check my console log to fix it
