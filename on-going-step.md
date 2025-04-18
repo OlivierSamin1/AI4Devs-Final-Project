@@ -40,35 +40,47 @@ We are experiencing a persistent 400 Bad Request error when attempting to access
    - Successfully copied the patch script to the container with `docker compose cp patch_settings.py backend:/app/`.
    - Successfully executed the patch script inside the container with `docker compose exec backend python /app/patch_settings.py`.
 
-### Next Steps
-Now that we've applied the patch to simplify the Django configuration and enable debugging, we need to verify if this resolves the 400 Bad Request issue:
+9. **Enhanced Patch Script**:
+   - Updated the patch script with more comprehensive changes:
+     - Added enhanced logging configuration to capture more detailed request information
+     - Created multiple test endpoints (`/basic-test/`, `/super-basic-test/`, `/api/test/`)
+     - Added a standalone test view module for direct HTTP responses
+     - Made all test endpoints accessible without authentication
+     - Included wildcard in ALLOWED_HOSTS to ensure the application accepts requests from any host
+   - Successfully applied the enhanced patch, confirming that all changes were made to the Django configuration.
 
-1. **Test the basic endpoints** to verify basic functionality:
+### Next Steps
+Now that we've applied the enhanced patch to the Django configuration, we need to test if the endpoints are accessible:
+
+1. **Test the basic endpoints** without authentication:
    ```bash
    curl http://jarvis.localhost/basic-test/
-   curl http://jarvis.localhost/debug/
+   curl http://jarvis.localhost/super-basic-test/
    ```
 
 2. **Test the API endpoints** with and without authentication:
    ```bash
    curl http://jarvis.localhost/api/test/
+   curl http://jarvis.localhost/api/
    curl http://jarvis.localhost/api/health/symptoms/
    curl -H "Authorization: Token 11d3acee94a184b88afa091ed3df7ef71850bffd" http://jarvis.localhost/api/health/symptoms/
    ```
 
-3. **Check container logs** if issues persist:
-   ```bash
-   docker compose logs backend
-   ```
-
-4. **Review NGINX logs** for any proxy-related issues:
-   ```bash
-   docker compose logs nginx
-   ```
-
-5. **Restart containers** if necessary to ensure all changes take effect:
+3. **Check if the application needs to be restarted** to apply all changes:
    ```bash
    docker compose restart backend nginx
    ```
 
-After running these tests, we should have a clearer picture of whether the issue has been resolved or if further debugging is required. If the 400 error persists, we'll need to analyze the logs to identify any specific error messages or patterns.
+4. **Verify logs for detailed error information** if issues persist:
+   ```bash
+   docker compose logs backend
+   docker compose logs nginx
+   ```
+
+5. **Test direct access** to the backend to rule out NGINX issues:
+   ```bash
+   docker compose exec nginx curl http://backend:8000/basic-test/
+   docker compose exec nginx curl http://backend:8000/api/test/
+   ```
+
+If the endpoints are still returning errors after these steps, we'll need to examine the logs in detail to identify any specific error messages that can help diagnose the underlying issue.
