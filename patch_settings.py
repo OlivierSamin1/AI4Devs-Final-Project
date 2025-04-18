@@ -74,7 +74,7 @@ print(f"Successfully patched {settings_file} with debug settings.")
 urls_file = 'jarvis/urls.py'
 
 # Complete urls.py content with all necessary test endpoints
-urls_content = """
+urls_content = '''
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -151,7 +151,7 @@ urlpatterns = [
 # Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-"""
+'''
 
 # Write the complete urls file
 with open(urls_file, 'w') as f:
@@ -161,12 +161,12 @@ print(f"Successfully updated {urls_file} with debug views.")
 
 # Create a test view to check response directly
 test_view_path = 'jarvis/test_view.py'
-test_view_content = """
+test_view_content = '''
 from django.http import HttpResponse
 
 def test_view(request):
     return HttpResponse("Test view is working!", content_type="text/plain")
-"""
+'''
 
 with open(test_view_path, 'w') as f:
     f.write(test_view_content)
