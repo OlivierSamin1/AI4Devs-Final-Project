@@ -117,7 +117,7 @@ You are a senior product manager and  a senior business analyst.
 3. use @00_integration_documentation_summary.md to generate one by one all the documents  in the folder @database_integration_documentation 
 
 
-**Prompt2 **:
+**Prompt2**:
 Before generating the other documents, I forgot 2 very important information for my project:
 1. I will need to add a data-privacy-vault for my actual database
 2. I will need to make a demo so I will need to generate synthetic data that will be accessibleonly for the demo.
@@ -151,3 +151,29 @@ You have to update the documentation @03_final_project.md to ensure that the fol
 
 **Prompt 5**:
 You dockerized only the backend, I want the whole project dockeriezd, so it means also the front end. Update all the files @03_final_project.md and the repo @implementation_steps 
+
+20250417
+---
+All the documentation has been generated and I am in the implementation steps (I forgot to copy my previous prompts):
+
+**Prompt 1**:
+You are a senior software engineer with strong knowledge of best practices in front end and backend.
+check the file @01c_Web_Application.md and follow the instructions in @on-going-step.md and apply them. If you have any doubt just ask questions
+
+**Prompt 2**:
+you are a senior software engineer with a strong knowledge in backend, frontend, react and python. You know how to apply all the best practices. You have a strong knowledge in docker and raspberry pi.
+My actual project is deployed on a raspberry pi 4. I can ping it on jarvis.localhost. Here is the following behaviour I expect:
+1. when no docker container is launch on my raspberry pi 4 I should not have access to my project from my raspberry pi with local IP 192.168.1.129 nor via jarvis.localhost.
+2. when I launch my containers I expect to get access to my project trhough jarvis.localhost
+
+The actual behaviour is as follow:
+1. when no containers are lauched I have access to my project through 192.1681.129
+2. when containers are launched I do not have access to my project through jarvis.localhost
+
+I know that in the corresponding nginx file it is setup as localhost and not jarvis.localhost.
+
+Fix this
+
+**Prompt 3 - using the MCP browser-tools**: 
+That's good, now we need to fix the bad request issue. Check my console log to fix it
+
