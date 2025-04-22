@@ -493,4 +493,19 @@ You have now successfully set up a publicly accessible web application that:
 - Is protected with basic authentication
 - Displays reservation data from the existing database server (Raspberry Pi 3B)
 
-This completes the "Hello World" proof of concept. The next steps would be to enhance security measures and develop more sophisticated features as outlined in the project specification. 
+This completes the "Hello World" proof of concept. The next steps would be to enhance security measures and develop more sophisticated features as outlined in the project specification.
+
+## Implementation Status
+
+Below is a status table showing the progress of each step in the public access configuration:
+
+| Section | Step | Status | Comments |
+|---------|------|--------|----------|
+| **Public Access Configuration** | Domain Name Setup | ❌ | Domain name not yet purchased or configured |
+| | Port Forwarding Configuration | ❌ | Port forwarding not yet set up on the router |
+| | SSL Certificate Configuration | ❌ | SSL certificate not yet obtained from Let's Encrypt |
+| | Basic Authentication | ❌ | Basic authentication not yet implemented |
+| | Security Headers | ❌ | Security headers not yet configured in Nginx |
+| | Fail2Ban Installation | ❌ | Fail2Ban not yet installed for brute force protection |
+| | Testing Public Access | ❌ | Public access testing not yet performed |
+| | Monitoring Access | ❌ | Access monitoring not yet set up | 

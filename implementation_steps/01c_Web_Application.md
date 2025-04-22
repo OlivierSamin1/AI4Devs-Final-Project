@@ -664,4 +664,46 @@ Now we'll create a separate React frontend container that will communicate with 
 
 ## Next Steps
 
-Now that the web application is set up with fully containerized backend and frontend components, proceed to the [Public Access Configuration](./01d_Public_Access.md) document to make the application accessible from the internet. 
+Now that the web application is set up with fully containerized backend and frontend components, proceed to the [Public Access Configuration](./01d_Public_Access.md) document to make the application accessible from the internet.
+
+## Implementation Status
+
+Below is a status table showing the progress of each step in the web application implementation:
+
+| Section | Step | Status | Comments |
+|---------|------|--------|----------|
+| **Docker Installation** | Install Docker | ✅ | |
+| | Add user to Docker group | ✅ | |
+| | Verify Docker installation | ✅ | |
+| | Install Docker Compose | ✅ | |
+| | Verify Docker Compose installation | ✅ | |
+| **Project Directory Setup** | Create project directories | ✅ | |
+| **Backend Container Configuration** | Setup backend directory | ✅ | |
+| | Create Dockerfile | ✅ | |
+| | Create requirements.txt | ✅ | |
+| | Create .env file | ✅ | |
+| | Configure Django settings | ✅ | |
+| | Test API endpoint | ❌ | Currently experiencing 400 Bad Request errors when accessing API endpoints |
+| **Frontend Container Implementation** | Create Dockerfile | ✅ | |
+| | Create nginx configuration | ✅ | |
+| | Initialize React application | ✅ | |
+| | Install dependencies | ✅ | |
+| | Create API interface | ✅ | |
+| | Create SymptomTable component | ✅ | |
+| | Update App component | ✅ | |
+| | Configure Vite | ✅ | |
+| **Docker Compose Setup** | Create docker-compose.yml | ✅ | |
+| **Building and Running the Application** | Build and start containers | ✅ | |
+| | Verify container status | ✅ | |
+| | Access web application | ❌ | Web application UI is accessible but API requests to backend are failing with 400 Bad Request |
+| **Testing the Application** | Verify health symptoms display | ❌ | Cannot display health symptoms due to API communication issues |
+| | Verify database connection | ❌ | Unable to verify due to API communication issues |
+| | Verify container operation | ✅ | All containers are running but there are issues with the backend API |
+| **Container Management** | Container operations knowledge | ✅ | |
+| **Troubleshooting** | Initial diagnostics performed | ✅ | Several debugging scripts have been developed to diagnose the API issues |
+| **Next Steps** | Public Access Configuration | ❌ | Blocked by current API communication issues |
+
+**Current Focus**: 
+- Resolving 400 Bad Request errors when accessing the Django backend API endpoints
+- Diagnosing potential CORS or configuration issues in the Django application
+- Testing direct access to API endpoints through both the nginx proxy and directly to the backend 
