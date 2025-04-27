@@ -13,3 +13,12 @@
   b. update POC to use another model than the first one: 0.5h
   c. dockerization backend: 1h
   d. dockerization front end: 1.5h
+
+
+20250427:
+---
+
+8. generating missing documentation (PRD, user sories, backlog and tickets)
+  a. PRD and user stories for MVC: 0.5h
+  b. product backlog and tickets genration for MVC : 0.5h
+  

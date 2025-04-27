@@ -176,3 +176,59 @@ Fix this
 
 **Prompt 3 - using the MCP browser-tools**: 
 That's good, now we need to fix the bad request issue. Check my console log to fix it
+
+20250427
+---
+
+After reading again the deliverables for the project, I realize i have not complied with the user stories and tickets part so I will do it now (only for the new project part as the refactorization of the database is already done)
+
+**Prompt 1**:
+you are a senior project manager as well as a senior business analyst. From the document @03_final_project.md I want you to generate in the same folder a PRD in a markdown format.
+
+**Prompt 2**:
+Good, now I want you to update the user stories for the document management and the email integration. These two parts are not necesarly related only to financial, it is much more general than just financial. 
+Then update all the user stories of this file with acceptance criteria.
+
+**Prompt 3**:
+Now I want you to update the fiel @personal_database_assistant_prd.md to provide a MVC with the following features:
+1. accessible for internet a front end UI with a chatbot that can retrieve data regarding health symptoms from my database.
+2. I do not need any authentication or authorization for this acces (as for the chat bot nor for the endpoint) because it is not sensitive data
+3. I want to reduce the features to the minimum to perform the MVC
+
+Then add as a next layer when this MVC is OK the following features in order, each feature will e a new layer and so a new release:
+1. Add authentication and autorization for chatbot access (with group creation in the Django backend)
+2. add endpoint to retrieve financial data if authorization granted
+3. Generate synthetic financial data for emonstration purpose
+4. Generate graphs from this financial data and the chatbot user request
+
+
+**Prompt 4**:
+You are now a senior product manager and a senior project manager. You have a strong knowledge of best practices to write user stories. You will use @personal_database_assistant_prd.md to generate  all the needed user stories with acceptance criteria regarding the MVP phase. These user stories will be created in the root folder in a new folder called User_stories. This file will be called MVP_user_stories.md. You have to generate all the usual and also all the unlikely user stories related to these features.
+
+**Prompt 5**:
+Great now I want you to add user stories for backend dev related to the development of the backend for MVP phase:
+1. API and connection with the database (RPI4 to RPI3)
+2. Nginx setup
+3. internet connection access to the RPI 4
+And all the other backend processes needed in the development.
+Create a new markdown file for these stories
+
+**Prompt 6**:
+as a senior product manager  I want you to generate from the files @Backend_MVP_user_stories.md and @MVP_user_stories.md  a backlog that will take into order the backend work to setup everything first and then go the the other user stories.
+
+**Prompt 7**:
+in @Backend_MVP_user_stories.md we miss all unit tests and integration tests suite. Same thing in @MVP_user_stories.md . Add them to the files
+
+**Prompt 8**:
+Update @MVP_Product_Backlog.md as I updated with tests @Backend_MVP_user_stories.md and @MVP_user_stories.md 
+
+**Prompt 9**:
+Now create a new folder called tickets and inside it generate one markdown file by ticket representing the ones inside @MVP_Product_Backlog.md. Follow the best practices in ticket creation to do so. 
+
+**Prompt 10**:
+Now I want you to generate a new mardown file with a table that will keep track of all the tickets done or not. So the table should be structuresd as follow:
+column 1: ticket ID
+column 2: ticket name
+column 3: ticket staus (with an emoji done or not done)
+column 4: comment (only if needed)
+Add this file in the tickets folder and find the corresponding name for it
