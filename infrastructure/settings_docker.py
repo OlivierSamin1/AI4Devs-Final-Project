@@ -3,6 +3,7 @@ Django settings for jarvis project - Docker configuration.
 """
 
 import os
+import tempfile
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -109,10 +110,18 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# Use a temporary directory in DEBUG mode to avoid permission issues
+if DEBUG:
+    STATIC_ROOT = os.path.join(tempfile.gettempdir(), 'static')
+else:
+    STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Use a temporary directory in DEBUG mode to avoid permission issues
+if DEBUG:
+    MEDIA_ROOT = os.path.join(tempfile.gettempdir(), 'media')
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

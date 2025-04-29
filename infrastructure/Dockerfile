@@ -26,8 +26,9 @@ COPY jarvis/ /app/
 COPY infrastructure/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Create static and media directories
-RUN mkdir -p /app/static /app/media
+# Create static and media directories with proper permissions
+RUN mkdir -p /app/static /app/media \
+    && chmod 777 /app/static /app/media
 
 # Create a non-root user
 RUN useradd -m appuser

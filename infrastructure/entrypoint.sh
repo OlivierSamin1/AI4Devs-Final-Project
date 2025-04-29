@@ -35,11 +35,16 @@ sys.exit(1)
 
 # Apply database migrations
 echo "Applying database migrations..."
-python manage.py migrate --noinput
+python manage.py migrate --noinput || echo "Migration failed, but continuing..."
 
-# Collect static files
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
+# Skip static files collection if DEBUG=True
+if [ "${DEBUG:-False}" = "True" ]; then
+    echo "Debug mode enabled, skipping static files collection"
+else
+    # Collect static files
+    echo "Collecting static files..."
+    python manage.py collectstatic --noinput || echo "Static files collection failed, but continuing..."
+fi
 
 # Create superuser if specified in environment variables
 if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ]; then
