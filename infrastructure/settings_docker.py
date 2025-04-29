@@ -145,6 +145,13 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Check if python-json-logger is available
+try:
+    import pythonjsonlogger.jsonlogger
+    has_json_logger = True
+except ImportError:
+    has_json_logger = False
+
 # Logging Configuration
 LOGGING = {
     'version': 1,
@@ -157,10 +164,6 @@ LOGGING = {
         'simple': {
             'format': '{levelname} {message}',
             'style': '{',
-        },
-        'json': {
-            'format': '{"time": "%(asctime)s", "level": "%(levelname)s", "message": "%(message)s", "module": "%(module)s", "process": "%(process)d", "thread": "%(thread)d"}',
-            'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
         },
     },
     'filters': {
@@ -175,7 +178,7 @@ LOGGING = {
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'json' if not DEBUG else 'verbose',
+            'formatter': 'verbose',
         },
         'file': {
             'level': 'ERROR',
@@ -210,4 +213,13 @@ LOGGING = {
         'handlers': ['console'],
         'level': 'INFO',
     },
-} 
+}
+
+# Add JSON formatter if python-json-logger is available
+if has_json_logger:
+    LOGGING['formatters']['json'] = {
+        'format': '{"time": "%(asctime)s", "level": "%(levelname)s", "message": "%(message)s", "module": "%(module)s", "process": "%(process)d", "thread": "%(thread)d"}',
+        'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+    }
+    if not DEBUG:
+        LOGGING['handlers']['console']['formatter'] = 'json' 

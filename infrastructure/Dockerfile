@@ -19,6 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install Python dependencies
 COPY jarvis/requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
+# Ensure python-json-logger is installed for structured logging
+RUN pip install --no-cache-dir python-json-logger>=2.0.7
 
 # Copy project
 COPY jarvis/ /app/
