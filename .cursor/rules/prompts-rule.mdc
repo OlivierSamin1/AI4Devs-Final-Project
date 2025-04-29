@@ -1,6 +1,5 @@
 ---
 description: 
 globs: 
-alwaysApply: true
+alwaysApply: false
 ---
-copy each exact prompt I write to [prompts.md](mdc:tickets/prompts.md) using markdown format. Create the file if it does not exist. separate each prompt from the previous one using a markdown separator followed by a generated title for the new prompt. The title must start by the current date with the format "yyyy/mm/dd: hh:mm - " then the genearted title. 

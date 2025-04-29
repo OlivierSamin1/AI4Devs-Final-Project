@@ -6,27 +6,68 @@ These functions are used by both the health API endpoints and internal monitorin
 """
 from django.db import connections
 from django.db.utils import OperationalError
+from django.conf import settings
 import socket
 import os
 import logging
 
 logger = logging.getLogger(__name__)
 
+def reload_environment_settings():
+    """
+    Reload settings from environment variables.
+    
+    This ensures that any changes to environment variables after
+    container startup are properly reflected in the health checks.
+    """
+    # Force reload of settings by clearing cached values
+    if hasattr(settings, 'DATABASES') and 'default' in settings.DATABASES:
+        # Update database settings from environment
+        settings.DATABASES['default']['HOST'] = os.environ.get('DB_HOST', '192.168.1.128')
+        settings.DATABASES['default']['PORT'] = os.environ.get('DB_PORT', '5432')
+        settings.DATABASES['default']['NAME'] = os.environ.get('DB_NAME', 'database')
+        settings.DATABASES['default']['USER'] = os.environ.get('DB_USER', 'olivier')
+        
+        # Force Django to reconnect by closing existing connections
+        connections.close_all()
+        
+    logger.info("Environment settings reloaded")
+
 def check_database_connection():
     """
     Check if the database connection is working.
+    Uses a direct connection with environment variables to ensure accuracy.
     
     Returns:
         dict: Status of database connection with details
     """
+    import psycopg2
     try:
-        db_conn = connections['default']
-        db_conn.cursor()
+        # Force new connection instead of using Django's cached connection
+        host = os.environ.get('DB_HOST', '192.168.1.128')
+        port = os.environ.get('DB_PORT', '5432')
+        dbname = os.environ.get('DB_NAME', 'database')
+        user = os.environ.get('DB_USER', 'olivier')
+        password = os.environ.get('DB_PASSWORD', '')
+        
+        # Log connection attempt for debugging
+        logger.info(f"Attempting database connection to {host}:{port}/{dbname}")
+        
+        # Create a new connection to test connectivity
+        conn = psycopg2.connect(
+            dbname=dbname,
+            user=user,
+            password=password,
+            host=host,
+            port=port,
+            connect_timeout=3  # Add timeout to avoid long waits
+        )
+        conn.close()
         return {
             'status': 'healthy',
-            'details': 'Database connection established'
+            'details': f'Database connection established to {host}:{port}'
         }
-    except OperationalError as e:
+    except Exception as e:
         logger.error(f"Database connection error: {str(e)}")
         return {
             'status': 'unhealthy',
@@ -126,6 +167,9 @@ def get_container_health_status():
     Returns:
         tuple: (bool, dict) indicating if healthy and detailed status
     """
+    # Reload environment settings to ensure up-to-date configuration
+    reload_environment_settings()
+    
     # Check all components
     db_status = check_database_connection()
     disk_status = check_disk_space()

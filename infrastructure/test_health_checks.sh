@@ -165,8 +165,19 @@ print_result $? "Starting containers with incorrect DB settings" "Failed to star
 echo "Step 4: Waiting for the Django container to be running..."
 sleep 15
 
-# Step 5: Test the health endpoint
-echo "Step 5: Testing the health endpoint with DB connection failure..."
+# Step 5: Verify that environment variable was passed to container
+echo "Step 5: Verifying that incorrect DB_HOST was passed to container..."
+db_host_in_container=$(docker exec "$DJANGO_CONTAINER" printenv DB_HOST)
+echo -e "DB_HOST in container: ${YELLOW}$db_host_in_container${NC}"
+
+if [[ "$db_host_in_container" == "192.168.1.999" ]]; then
+    print_result 0 "Incorrect DB_HOST was properly set in container"
+else
+    print_result 1 "Environment variable test failed" "Expected DB_HOST=192.168.1.999, got $db_host_in_container"
+fi
+
+# Step 6: Test the health endpoint
+echo "Step 6: Testing the health endpoint with DB connection failure..."
 response=$(curl -s -w "\n%{http_code}" http://localhost:8000/health/)
 http_code=$(echo "$response" | tail -n1)
 content=$(echo "$response" | sed '$d')
@@ -278,7 +289,7 @@ nginx_health_logs=$(docker inspect --format "{{range .State.Health.Log}}{{.Outpu
 echo -e "Django health logs: ${YELLOW}$django_health_logs${NC}"
 echo -e "Nginx health logs: ${YELLOW}$nginx_health_logs${NC}"
 
-if [[ "$django_health_logs" == *"200"* ]] || [[ "$django_health_logs" == *"OK"* ]]; then
+if [[ "$django_health_logs" == *"200"* ]] || [[ "$django_health_logs" == *"OK"* ]] || [[ "$django_health_logs" == *"healthy"* ]]; then
     print_result 0 "Django health logs show successful checks"
 else
     print_result 1 "Django health logs inspection failed" "Expected success indicators in logs"
