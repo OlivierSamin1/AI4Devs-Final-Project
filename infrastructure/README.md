@@ -4,7 +4,7 @@ This directory contains Docker configuration files for deploying the Jarvis appl
 
 ## System Architecture
 
-- **Django Backend**: Runs on Raspberry Pi 4
+- **Django Backend**: Runs on Raspberry Pi 4 (ARM64)
 - **Nginx**: Acts as a reverse proxy, runs on Raspberry Pi 4
 - **PostgreSQL**: Already configured and running on Raspberry Pi 3 (192.168.1.128)
 
@@ -13,22 +13,36 @@ This directory contains Docker configuration files for deploying the Jarvis appl
 ### Prerequisites
 
 - Raspberry Pi 4 with Docker and Docker Compose installed
-- Raspberry Pi 3 with PostgreSQL running in Docker
+- Raspberry Pi 3 with PostgreSQL running in Docker (already set up)
 - Network connectivity between the two Raspberry Pis
 
 ### Configuration
 
-1. Copy the example environment file and edit it:
+1. Create an environment file:
    ```bash
-   cp env.example .env
-   nano .env
+   # Example .env file
+   # Django settings
+   DEBUG=True
+   SECRET_KEY=your_secure_key
+   ALLOWED_HOSTS=localhost,127.0.0.1,192.168.1.10
+   
+   # Database settings - Connect to existing PostgreSQL on RPI3
+   DB_ENGINE=django.db.backends.postgresql
+   DB_NAME=database
+   DB_USER=olivier
+   DB_PASSWORD=your_password
+   DB_HOST=192.168.1.128
+   DB_PORT=5432
+   
+   # Superuser credentials
+   DJANGO_SUPERUSER_USERNAME=admin
+   DJANGO_SUPERUSER_EMAIL=admin@example.com
+   DJANGO_SUPERUSER_PASSWORD=secure_password
    ```
 
-2. Modify environment variables to match your setup:
-   - Set a strong `SECRET_KEY`
-   - Update `ALLOWED_HOSTS` if necessary
-   - Ensure database connection details match your PostgreSQL setup on RPI3
-   - Configure superuser credentials
+2. Make sure the PostgreSQL on RPI3 is configured to accept connections:
+   - PostgreSQL should be listening on all interfaces 
+   - pg_hba.conf should allow connections from your network
 
 ### Deployment
 
@@ -36,52 +50,71 @@ To start the services:
 
 ```bash
 cd /path/to/infrastructure
-docker-compose up -d
+docker compose up -d
 ```
 
 To stop the services:
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 To view logs:
 
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
+
+## Architecture Details
+
+### Django Container
+- Uses ARM64-compatible Python 3.10 image
+- Runs with host network mode to directly access PostgreSQL on RPI3
+- Automatically waits for PostgreSQL to be available
+- Applies database migrations on startup
+- Creates a superuser if specified
+- Handles static files collection
+- Uses Gunicorn as the application server
+
+### Nginx Container
+- Lightweight ARM64-compatible Alpine-based image
+- Acts as a reverse proxy to Django
+- Serves static and media files
+- Exposed on port 8080 (http://your-rpi4-ip:8080)
 
 ## Resource Optimization
 
-The Docker Compose configuration includes resource limits optimized for Raspberry Pi 4:
+- CPU resource limits to prevent overloading the Raspberry Pi
+- Non-root users for both containers
+- Alpine-based Nginx for minimal footprint
+- Error resilience with automatic restart policies
 
-- Django backend: 512MB memory limit, 0.75 CPU
-- Nginx: 128MB memory limit, 0.3 CPU
+## Accessing the Application
 
-These limits can be adjusted in the `docker-compose.yml` file based on your specific Raspberry Pi model and requirements.
-
-## Health Checks and Reliability
-
-- Containers are configured with `restart: unless-stopped` policy
-- The Django service includes health checks
-- The entrypoint script waits for PostgreSQL to be available before starting
+Once deployed, the application can be accessed at:
+- Web interface: http://your-rpi4-ip:8080
+- Django admin: http://your-rpi4-ip:8080/admin/
 
 ## Troubleshooting
 
 If you encounter issues:
 
-1. Check connectivity to PostgreSQL on RPI3:
+1. Check container status:
    ```bash
-   ping 192.168.1.128
+   docker ps
    ```
 
-2. Verify PostgreSQL is accepting connections:
+2. Check container logs:
+   ```bash
+   docker logs infrastructure-django-1
+   docker logs infrastructure-nginx-1
+   ```
+
+3. Verify PostgreSQL connectivity:
    ```bash
    nc -zv 192.168.1.128 5432
    ```
 
-3. Check container logs:
-   ```bash
-   docker-compose logs django
-   docker-compose logs nginx
-   ``` 
+4. Check if environment variables are properly set in .env file
+
+5. For permission issues with static files, make sure DEBUG=True in your .env file during development 
