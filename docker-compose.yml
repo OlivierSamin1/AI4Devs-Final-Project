@@ -1,1 +1,75 @@
- 
+version: '3.8'
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: infrastructure/Dockerfile
+    restart: unless-stopped
+    network_mode: "host"
+    env_file:
+      - .env
+    volumes:
+      - django_static:/app/static
+      - django_media:/app/media
+      - ./infrastructure/settings_docker.py:/app/jarvis/settings.py
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
+        tag: "django/{{.ID}}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+
+  nginx:
+    build:
+      context: ./infrastructure/nginx
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      django:
+        condition: service_healthy
+    volumes:
+      - django_static:/app/static
+      - django_media:/app/media
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
+        tag: "nginx/{{.ID}}"
+    networks:
+      - backend_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/nginx-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+
+networks:
+  backend_network:
+    driver: bridge
+
+volumes:
+  django_static:
+  django_media: 

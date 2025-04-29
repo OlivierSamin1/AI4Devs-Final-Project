@@ -11,6 +11,13 @@ services:
       - django_static:/app/static
       - django_media:/app/media
       - ../infrastructure/settings_docker.py:/app/jarvis/settings.py
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
+        tag: "django/{{.ID}}"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s
@@ -37,6 +44,13 @@ services:
     volumes:
       - django_static:/app/static
       - django_media:/app/media
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
+        tag: "nginx/{{.ID}}"
     networks:
       - backend_network
     healthcheck:
