@@ -31,6 +31,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'reservation_api',
+    # These apps are referenced in models but not implemented yet
+    # 'real_estate',
+    # 'finances',
+    # 'tax',
 ]
 
 MIDDLEWARE = [
