@@ -74,6 +74,10 @@ DATABASES = {
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', '192.168.1.128'),
         'PORT': os.environ.get('DB_PORT', '5432'),
+        'OPTIONS': {
+            'sslmode': 'prefer',
+            'client_encoding': 'UTF8',
+        },
     }
 }
 
