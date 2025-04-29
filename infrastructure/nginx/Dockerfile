@@ -9,15 +9,12 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Create directories for static files and media
 RUN mkdir -p /app/static /app/media
 
-# Create user for nginx
-RUN adduser -D -H -u 1000 -s /bin/sh www-data
-
-# Set proper permissions
-RUN chown -R www-data:www-data /app /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
-RUN touch /var/run/nginx.pid && chown www-data:www-data /var/run/nginx.pid
+# Set proper permissions - using existing www-data user
+RUN chown -R nginx:nginx /app /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
+RUN touch /var/run/nginx.pid && chown nginx:nginx /var/run/nginx.pid
 
 # Switch to non-root user
-USER www-data
+USER nginx
 
 EXPOSE 80
 
