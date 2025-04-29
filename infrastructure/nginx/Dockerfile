@@ -1,4 +1,4 @@
-FROM arm32v7/nginx:1.24-alpine
+FROM arm64v8/nginx:1.24-alpine
 
 # Remove default Nginx config
 RUN rm /etc/nginx/conf.d/default.conf
