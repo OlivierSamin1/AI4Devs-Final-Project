@@ -88,3 +88,15 @@ The project follows a sprint-based development approach with user stories groupe
 
 This project is licensed under the terms included in the LICENSE file.
 
+## Changes Made for Container Health Checks Implementation
+
+- **Implemented Health Checks**: Added health check endpoints for Django and Nginx to monitor their statuses.
+- **Docker Configuration**: Updated `docker-compose.yml` to include health check configurations for both services.
+- **Database Connection Check**: Enhanced the `check_database_connection()` function in `container_health.py` to use environment variables directly and improve error detection.
+- **Test Script Improvements**: Updated `test_health_checks.sh` to provide better diagnostics and ensure environment variables are correctly used.
+- **Documentation**: Updated relevant documentation to reflect the changes made in the health checks implementation.
+
+### Summary of Health Check Features
+- Health checks for database, disk space, and memory usage.
+- Automatic restart of unhealthy containers based on health check results.
+
