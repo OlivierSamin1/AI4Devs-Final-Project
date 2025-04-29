@@ -118,3 +118,71 @@ If you encounter issues:
 4. Check if environment variables are properly set in .env file
 
 5. For permission issues with static files, make sure DEBUG=True in your .env file during development 
+
+## Container Health Checks
+
+Container health checks have been implemented to automatically detect and handle unhealthy service instances. These health checks allow Docker to monitor the status of each container and take action if a container becomes unhealthy.
+
+### Health Check Implementations
+
+#### Django Backend Service
+
+The Django backend service uses a dedicated health endpoint at `/health/` which checks:
+- Database connectivity
+- Disk space availability
+- Memory usage
+
+Configuration in `docker-compose.yml`:
+```yaml
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+```
+
+#### Nginx Service
+
+The Nginx service has a simple health check endpoint at `/nginx-health` that returns a 200 OK response.
+
+Configuration in `docker-compose.yml`:
+```yaml
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost/nginx-health"]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 15s
+```
+
+### Dependency Management
+
+Services that depend on other services will wait for the dependency to be healthy before starting:
+
+```yaml
+depends_on:
+  django:
+    condition: service_healthy
+```
+
+### Health Check Parameters
+
+- `interval`: How often the health check runs (e.g., 30s)
+- `timeout`: Maximum time a check can take before being considered failed
+- `retries`: Number of consecutive failures needed to mark a container unhealthy
+- `start_period`: Initial grace period during container startup
+
+### Manual Health Verification
+
+You can manually verify container health status using:
+
+```bash
+docker ps --format "{{.Names}}: {{.Status}}"
+```
+
+Or check specific container details:
+
+```bash
+docker inspect --format "{{.State.Health.Status}}" <container_name>
+``` 

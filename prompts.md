@@ -196,3 +196,21 @@ In my backend app (@jarvis ) there is an error that provoke an endless restartin
 Inspect the code and suggest me all the possible actionsto investigate. Do not do anything without my approval first. You will write your answer in the folder @debug_files in a new markdown file
 ```
 
+# Prompts
+
+---
+## 2024/05/30: 10:44 - Docker Container Health Checks Implementation Plan Request
+
+You are a senior software engineer with strong knowledge in Raspberry pi, backend and infrastructure. I want you to explain me all hte steps you are going to perform in order to solve the ticket @US-BE-23_Implement_Container_Health_Checks.md . You are not allowed to perform any action untill I give you my authorization.
+
+---
+## 2024/05/30: 10:57 - Implement Container Health Checks in Infrastructure Folder
+
+implement it and take into account that:
+1. all the infrastrcuture is insie @infrastructure 
+2. there is a healt folder inside jarvis project. This is a folder relqted to an app called health, so if you need to create a folder, find another nañe than health to avoid confusion later
+
+---
+## 2024/05/30: 11:15 - Container Health Checks Manual Testing Request
+
+Now I want you to provide me with manual tests to verify that each feature you have added works properly
