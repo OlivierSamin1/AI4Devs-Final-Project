@@ -158,22 +158,41 @@ print_result $? "Creating test .env file" "Failed to create test .env file"
 
 # Step 3: Start containers with incorrect DB settings
 echo "Step 3: Starting containers with incorrect DB settings..."
-docker compose -f "$COMPOSE_FILE" up -d
+# First stop any existing containers
+docker compose -f "$COMPOSE_FILE" down
+
+# Export the environment variable explicitly to ensure it propagates to docker-compose
+export DB_HOST=192.168.1.999
+
+# Start the containers with the explicitly set environment variable
+DB_HOST=192.168.1.999 docker compose -f "$COMPOSE_FILE" up -d
 print_result $? "Starting containers with incorrect DB settings" "Failed to start containers"
 
 # Step 4: Wait for the Django container to be running
 echo "Step 4: Waiting for the Django container to be running..."
 sleep 15
 
-# Step 5: Verify that environment variable was passed to container
+# Step 5: Verify that incorrect DB_HOST was passed to container
 echo "Step 5: Verifying that incorrect DB_HOST was passed to container..."
 db_host_in_container=$(docker exec "$DJANGO_CONTAINER" printenv DB_HOST)
 echo -e "DB_HOST in container: ${YELLOW}$db_host_in_container${NC}"
+
+# Also check the env file that was copied into the container
+echo "Checking environment variable in container:"
+docker exec "$DJANGO_CONTAINER" env | grep -E "DB_HOST|DB_PORT" || echo "DB environment variables not found in container"
 
 if [[ "$db_host_in_container" == "192.168.1.999" ]]; then
     print_result 0 "Incorrect DB_HOST was properly set in container"
 else
     print_result 1 "Environment variable test failed" "Expected DB_HOST=192.168.1.999, got $db_host_in_container"
+    
+    # Output more debugging information
+    echo -e "\n${YELLOW}Debug Info:${NC}"
+    echo "Current directory: $(pwd)"
+    echo "Content of .env file:"
+    cat .env | grep -v PASSWORD || echo "No .env file found"
+    echo "Docker compose env output:"
+    docker compose -f "$COMPOSE_FILE" config | grep -A 5 environment || echo "No environment section found"
 fi
 
 # Step 6: Test the health endpoint

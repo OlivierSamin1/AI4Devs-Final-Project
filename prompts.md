@@ -228,3 +228,37 @@ Can you provide me a script that will perform all these tests one by one with ve
 ## 2024/05/30: 11:45 - Health Check Issue Analysis and Fix Request
 
 I want you to perform these verification and suggest me fixes. Wait for my approval to implement them
+
+---
+## 2024/05/30: 12:00 - Docker Build Disk Space Error
+
+fix this issue
+docker compose up -d --build
+WARN[0000] /home/olivier/AI4Devs-Final-Project/infrastructure/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+Compose can now delegate builds to bake for better performance.
+ To do so, set COMPOSE_BAKE=true.
+[+] Building 257.5s (17/17) FINISHED                                                                docker:default
+ => [django internal] load build definition from Dockerfile                                                   0.1s
+ => => transferring dockerfile: 1.04kB                                                                        0.0s
+ => [django internal] load metadata for docker.io/arm64v8/python:3.10-slim                                    1.3s
+ => [django internal] load .dockerignore                                                                      0.1s
+ => => transferring context: 2B                                                                               0.0s
+ => [django  1/11] FROM docker.io/arm64v8/python:3.10-slim@sha256:5d64c7cd5b2a4a2961890d8012bc5170bcb21b4d06  0.0s
+ => [django internal] load build context                                                                      1.3s
+ => => transferring context: 1.87MB                                                                           0.7s
+ => CACHED [django  2/11] WORKDIR /app                                                                        0.0s
+ => [django  3/11] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential      61.2s
+ => [django  4/11] COPY jarvis/requirements.txt /app/                                                         0.8s 
+ => [django  5/11] RUN pip install --no-cache-dir -r requirements.txt                                        17.9s 
+ => [django  6/11] COPY jarvis/ /app/                                                                        32.1s 
+ => [django  7/11] COPY infrastructure/entrypoint.sh /app/entrypoint.sh                                       0.8s 
+ => [django  8/11] RUN chmod +x /app/entrypoint.sh                                                            1.2s
+ => [django  9/11] RUN mkdir -p /app/static /app/media     && chmod 777 /app/static /app/media                2.1s
+ => [django 10/11] RUN useradd -m appuser                                                                     1.1s
+ => [django 11/11] RUN chown -R appuser:appuser /app                                                        135.6s
+ => [django] exporting to image                                                                               2.8s
+ => => exporting layers                                                                                       2.7s
+ => => writing image sha256:14a6b7ee54587c36a1e8f855e368ba0dc970d95f094b3149a3c5f25178ae677b                  0.0s
+ => => naming to docker.io/library/infrastructure-django                                                      0.0s
+ => [django] resolving provenance for metadata file                                                           0.0s
+write /home/olivier/.docker/buildx/refs/default/default/.tmp-x63sji1t79mfrdf79fyswu77s4159802409: no space left on device

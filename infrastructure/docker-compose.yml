@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   django:
     build:
@@ -13,9 +11,6 @@ services:
       - django_static:/app/static
       - django_media:/app/media
       - ../infrastructure/settings_docker.py:/app/jarvis/settings.py
-    environment:
-      - DB_HOST=192.168.1.128
-      - DB_PORT=5432
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s

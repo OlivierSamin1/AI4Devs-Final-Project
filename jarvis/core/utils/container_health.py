@@ -20,18 +20,9 @@ def reload_environment_settings():
     This ensures that any changes to environment variables after
     container startup are properly reflected in the health checks.
     """
-    # Force reload of settings by clearing cached values
-    if hasattr(settings, 'DATABASES') and 'default' in settings.DATABASES:
-        # Update database settings from environment
-        settings.DATABASES['default']['HOST'] = os.environ.get('DB_HOST', '192.168.1.128')
-        settings.DATABASES['default']['PORT'] = os.environ.get('DB_PORT', '5432')
-        settings.DATABASES['default']['NAME'] = os.environ.get('DB_NAME', 'database')
-        settings.DATABASES['default']['USER'] = os.environ.get('DB_USER', 'olivier')
-        
-        # Force Django to reconnect by closing existing connections
-        connections.close_all()
-        
-    logger.info("Environment settings reloaded")
+    # Force Django to reconnect by closing existing connections
+    connections.close_all()
+    logger.info("Database connections closed to force reload")
 
 def check_database_connection():
     """
@@ -42,25 +33,26 @@ def check_database_connection():
         dict: Status of database connection with details
     """
     import psycopg2
+    
+    # Always read directly from environment variables, not from Django settings
+    host = os.environ.get('DB_HOST', '192.168.1.128')
+    port = os.environ.get('DB_PORT', '5432')
+    dbname = os.environ.get('DB_NAME', 'database')
+    user = os.environ.get('DB_USER', 'olivier')
+    password = os.environ.get('DB_PASSWORD', '')
+    
+    # Log connection attempt for debugging
+    logger.info(f"Attempting database connection to {host}:{port}/{dbname}")
+    
     try:
-        # Force new connection instead of using Django's cached connection
-        host = os.environ.get('DB_HOST', '192.168.1.128')
-        port = os.environ.get('DB_PORT', '5432')
-        dbname = os.environ.get('DB_NAME', 'database')
-        user = os.environ.get('DB_USER', 'olivier')
-        password = os.environ.get('DB_PASSWORD', '')
-        
-        # Log connection attempt for debugging
-        logger.info(f"Attempting database connection to {host}:{port}/{dbname}")
-        
-        # Create a new connection to test connectivity
+        # Set a very short timeout to fail quickly if the host is incorrect
         conn = psycopg2.connect(
             dbname=dbname,
             user=user,
             password=password,
             host=host,
             port=port,
-            connect_timeout=3  # Add timeout to avoid long waits
+            connect_timeout=3  # Short timeout to avoid hanging
         )
         conn.close()
         return {
@@ -71,7 +63,7 @@ def check_database_connection():
         logger.error(f"Database connection error: {str(e)}")
         return {
             'status': 'unhealthy',
-            'details': f'Database connection failed: {str(e)}'
+            'details': f'Database connection failed to {host}:{port}: {str(e)}'
         }
 
 def check_disk_space(path='/app', threshold_mb=100):
