@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  django:
+    build:
+      context: ..
+      dockerfile: infrastructure/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - django_static:/app/static
+      - django_media:/app/media
+      - ../infrastructure/settings_docker.py:/app/jarvis/settings.py
+    environment:
+      - DB_HOST=192.168.1.128
+      - DB_PORT=5432
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/admin/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - backend_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - django
+    volumes:
+      - django_static:/app/static
+      - django_media:/app/media
+    networks:
+      - backend_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+networks:
+  backend_network:
+    driver: bridge
+
+volumes:
+  django_static:
+  django_media: 
