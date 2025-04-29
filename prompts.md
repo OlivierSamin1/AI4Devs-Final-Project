@@ -214,3 +214,12 @@ implement it and take into account that:
 ## 2024/05/30: 11:15 - Container Health Checks Manual Testing Request
 
 Now I want you to provide me with manual tests to verify that each feature you have added works properly
+
+---
+## 2024/05/30: 11:25 - Container Health Checks Testing Script Request
+
+The test 1.1 is working
+The test 1.2 is not working, you have to detail all its step for me in more details.
+The test 2.1 did not return any output
+
+Can you provide me a script that will perform all these tests one by one with very explicit output to know exactly if everything is ok and also catch errors?
