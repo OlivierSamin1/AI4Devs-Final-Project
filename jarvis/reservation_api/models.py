@@ -1,3 +1,7 @@
+from django.db import models
+from django.contrib.auth.models import User
+from datetime import timedelta
+
 class Asset(models.Model):
     owner = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='real_estate_asset', blank=True, null=True)
