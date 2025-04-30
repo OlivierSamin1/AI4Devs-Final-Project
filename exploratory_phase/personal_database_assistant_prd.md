@@ -432,7 +432,7 @@ An individual who manages their personal finances, assets, and related documents
 
 ### 14.1 Minimum Viable Product (MVP)
 
-The MVP will focus on providing a simple, internet-accessible chatbot interface to query health symptoms data from the database with minimal features required to demonstrate value.
+The MVP will focus on providing a simple, internet-accessible chatbot interface to query health symptoms data from the existing database on Raspberry Pi 3B with minimal features required to demonstrate value.
 
 #### MVP Features
 1. **Internet-Accessible Frontend UI**
@@ -442,33 +442,34 @@ The MVP will focus on providing a simple, internet-accessible chatbot interface 
 
 2. **Health Symptoms Data Retrieval**
    - Chatbot capable of understanding queries about health symptoms
-   - Connection to database to retrieve relevant health data
+   - Secure connection to existing database on Raspberry Pi 3B to retrieve relevant health data
    - Simple response formatting for readability
 
 3. **Backend Implementation**
    - Basic Django REST API without authentication
-   - Single endpoint for chatbot queries
-   - Simple integration with PostgreSQL database
+   - Secure API bridge to communicate with Raspberry Pi 3B database
+   - Simple integration with PostgreSQL database on Raspberry Pi 3B
 
 4. **Infrastructure**
-   - Minimal Docker container setup (Frontend, Backend, Database)
-   - Basic network configuration
+   - Minimal Docker container setup (Frontend, Backend, API Bridge on Raspberry Pi 4)
+   - Secure network configuration between Raspberry Pi 4 and 3B
    - Simple deployment process
 
 #### MVP Non-Features
 - No authentication or authorization
-- No data privacy vault
+- No data privacy vault (though connection to database will be secure)
 - No document processing
 - No email integration
 - No financial data visualization
-- No complex security measures (beyond basic HTTPS)
+- No complex security measures (beyond basic HTTPS and secure database connection)
 
 #### MVP Acceptance Criteria
 - Chatbot can understand and respond to basic health symptoms queries
-- System can retrieve relevant health data from the database
+- System can securely retrieve relevant health data from the Raspberry Pi 3B database
 - Frontend is accessible from the internet
 - Interface is usable on desktop and mobile browsers
 - Basic Docker containerization is implemented
+- Secure communication between Raspberry Pi 4 and 3B is established
 
 ### 14.2 Incremental Feature Layers
 
@@ -513,17 +514,18 @@ Following the successful implementation of the MVP, features will be added in di
 For the MVP, the architecture will be simplified as follows:
 
 1. **Hardware Components**
-   - Web Application Server (Raspberry Pi 4) only
-   - Local database on the same device (simplified for MVP)
+   - Web Application Server (Raspberry Pi 4) for frontend and backend
+   - Database Server (Raspberry Pi 3B) with existing database
 
-2. **Containerized Components**
+2. **Containerized Components on Raspberry Pi 4**
    - Frontend Container (React with chatbot interface)
    - Backend Container (Django with symptom data API)
-   - Database Container (PostgreSQL with health data)
+   - API Bridge Container (for secure communication with Raspberry Pi 3B)
    - Nginx Container (for web serving and basic routing)
 
 3. **Network Architecture**
-   - Basic Docker network
+   - Basic Docker network on Raspberry Pi 4
+   - Secure communication channel between Raspberry Pi 4 and 3B
    - Single port exposure (443) to the internet
    - Simplified firewall rules
 
@@ -531,21 +533,26 @@ For the MVP, the architecture will be simplified as follows:
 graph TD
     Internet((Internet)) --> Nginx
     
-    subgraph "Docker Network - MVP"
+    subgraph "Raspberry Pi 4 - Docker Network"
         Nginx[Nginx Container\nPort 80, 443]
         Frontend[React Frontend\nContainer\nPort 3000]
         Backend[Django Backend\nContainer\nPort 8000]
-        Database[PostgreSQL\nContainer\nPort 5432]
+        APIBridge[API Bridge\nContainer]
+    end
+    
+    subgraph "Raspberry Pi 3B"
+        Database[PostgreSQL\nDatabase]
     end
     
     Nginx --> Frontend
-    Nginx --> Backend
     Frontend --> Backend
-    Backend --> Database
+    Backend --> APIBridge
+    APIBridge <-->|Secure\nLocal\nNetwork| Database
     
     style Nginx fill:#f9f,stroke:#333
     style Frontend fill:#bbf,stroke:#333
     style Backend fill:#bfb,stroke:#333
+    style APIBridge fill:#fbf,stroke:#333
     style Database fill:#fbb,stroke:#333
 ```
 
