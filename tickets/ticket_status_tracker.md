@@ -26,10 +26,16 @@ This document tracks the status of all tickets for the Personal Database Assista
 | US-BE-13 | Configure SSL/TLS in Nginx | ❌ | |
 | US-BE-14 | Implement Nginx Request Logging | ❌ | |
 
-## Sprint 2: Core Backend Services
+## Sprint 2: API Bridge and Database Connectivity
 
 | Ticket ID | Ticket Name | Status | Comments |
 |-----------|-------------|--------|----------|
+| US-BE-42 | Design API Bridge Architecture | ❌ | |
+| US-BE-43 | Implement Secure API Bridge Endpoints | ❌ | |
+| US-BE-44 | Implement Authentication for API Bridge | ❌ | |
+| US-BE-45 | Implement Encryption for API Bridge | ❌ | |
+| US-BE-46 | Configure Network Security Between RPI4 and RPI3 | ❌ | |
+| US-BE-47 | Implement API Bridge Connection Monitoring | ❌ | |
 | US-BE-09 | Implement Symptom Data Models | ❌ | |
 | US-BE-08 | Implement Database Query Service | ❌ | |
 | US-BE-01 | Create Health Symptoms API Endpoint | ❌ | |
@@ -122,10 +128,10 @@ This document tracks the status of all tickets for the Personal Database Assista
 
 | Sprint | Total Tickets | Completed | In Progress | Not Started | Blocked | On Hold |
 |--------|---------------|-----------|-------------|-------------|---------|---------|
-| Sprint 1 | 12 | 0 | 0 | 12 | 0 | 0 |
-| Sprint 2 | 9 | 0 | 0 | 9 | 0 | 0 |
+| Sprint 1 | 12 | 3 | 0 | 9 | 0 | 0 |
+| Sprint 2 | 15 | 0 | 0 | 15 | 0 | 0 |
 | Sprint 3 | 9 | 0 | 0 | 9 | 0 | 0 |
 | Sprint 4 | 9 | 0 | 0 | 9 | 0 | 0 |
 | Sprint 5 | 20 | 0 | 0 | 20 | 0 | 0 |
 | Sprint 6 | 20 | 0 | 0 | 20 | 0 | 0 |
-| **Total** | **79** | **0** | **0** | **79** | **0** | **0** | 
+| **Total** | **85** | **3** | **0** | **82** | **0** | **0** | 
