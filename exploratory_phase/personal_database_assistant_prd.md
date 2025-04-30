@@ -585,3 +585,4 @@ graph TD
 - **VLAN**: Virtual Local Area Network
 - **OCR**: Optical Character Recognition
 - **HMAC**: Hash-based Message Authentication Code
+ 

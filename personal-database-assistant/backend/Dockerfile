@@ -25,8 +25,7 @@ RUN pip install --no-cache-dir python-json-logger>=2.0.7
 # Copy project
 COPY backend/ /app/
 
-# Copy entrypoint script
-COPY backend/entrypoint.sh /app/entrypoint.sh
+# Make entrypoint script executable
 RUN chmod +x /app/entrypoint.sh
 
 # Create static and media directories with proper permissions

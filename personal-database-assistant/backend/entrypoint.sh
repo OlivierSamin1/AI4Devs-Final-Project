@@ -2,55 +2,66 @@
 
 set -e
 
-# Wait for PostgreSQL to be ready
-echo "Waiting for PostgreSQL..."
-python -c "
+# PostgreSQL connection settings
+DB_HOST=${DB_HOST:-localhost}
+DB_PORT=${DB_PORT:-5432}
+DB_WAIT_TIMEOUT=${DB_WAIT_TIMEOUT:-30}
+
+# Function to check if PostgreSQL is available
+postgres_ready() {
+    python << END
 import sys
-import time
 import psycopg2
+try:
+    psycopg2.connect(
+        dbname="${DB_NAME:-health_db}",
+        user="${DB_USER:-postgres}",
+        password="${DB_PASSWORD}",
+        host="${DB_HOST}",
+        port="${DB_PORT}",
+    )
+except psycopg2.OperationalError:
+    sys.exit(1)
+sys.exit(0)
+END
+}
 
-host = '${DB_HOST:-192.168.1.128}'
-port = '${DB_PORT:-5432}'
-dbname = '${DB_NAME:-database}'
-user = '${DB_USER:-olivier}'
-password = '${DB_PASSWORD}'
-
-for i in range(30):
-    try:
-        conn = psycopg2.connect(
-            dbname=dbname,
-            user=user,
-            password=password,
-            host=host,
-            port=port
-        )
-        conn.close()
-        sys.exit(0)
-    except psycopg2.OperationalError:
-        print(f'Waiting for PostgreSQL {i}/30')
-        time.sleep(2)
-
-sys.exit(1)
-"
+# Wait for PostgreSQL if needed
+echo "Waiting for PostgreSQL..."
+if [ -n "$DB_HOST" ] && [ "$DB_HOST" != "localhost" ] && [ "$DB_HOST" != "127.0.0.1" ]; then
+    # External database - wait for it
+    i=0
+    while [ $i -lt $DB_WAIT_TIMEOUT ]; do
+        if postgres_ready; then
+            break
+        fi
+        i=$((i+1))
+        echo "Waiting for PostgreSQL $i/$DB_WAIT_TIMEOUT"
+        sleep 1
+    done
+    
+    if [ $i -eq $DB_WAIT_TIMEOUT ]; then
+        echo "PostgreSQL is unavailable - continuing without it (some features may not work)"
+    fi
+else
+    echo "Using local/mock database - skipping PostgreSQL check"
+fi
 
 # Apply database migrations
 echo "Applying database migrations..."
 python manage.py migrate --noinput || echo "Migration failed, but continuing..."
 
-# Skip static files collection if DEBUG=True
-if [ "${DEBUG:-False}" = "True" ]; then
-    echo "Debug mode enabled, skipping static files collection"
-else
-    # Collect static files
-    echo "Collecting static files..."
-    python manage.py collectstatic --noinput || echo "Static files collection failed, but continuing..."
-fi
+# Collect static files
+echo "Collecting static files..."
+python manage.py collectstatic --noinput || echo "Static files collection failed, but continuing..."
 
-# Create superuser if specified in environment variables
-if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ]; then
-    echo "Creating superuser..."
+# Create superuser if specified
+echo "Creating superuser..."
+if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD" ]; then
     python manage.py createsuperuser --noinput || echo "Superuser already exists."
+else
+    echo "Superuser environment variables not set."
 fi
 
-# Execute the command passed to docker CMD
+# Start Gunicorn
 exec "$@" 
