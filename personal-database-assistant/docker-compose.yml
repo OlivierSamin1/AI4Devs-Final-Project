@@ -80,8 +80,8 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      frontend:
-        condition: service_started
+#      frontend:
+#        condition: service_started
     volumes:
       - django_static:/app/static
       - django_media:/app/media
